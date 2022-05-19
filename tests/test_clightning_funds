@@ -59,7 +59,21 @@ read -r -d '' listfunds <<__EOF__
 }
 __EOF__
 
+
+read -r -d '' jsont <<__EOF__
+{
+   "txids": [
+      .outputs[].txid
+   ],
+   "peer_ids": [
+      .channels[].peer_id
+   ]
+}
+__EOF__
+
+
 echo $listfunds | jq
+echo $listfunds | jq "$(jsont)"
 
 
 echo 'total.label total (sat)'
