@@ -1,0 +1,89 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+# lightning-cli --lightning-dir=/var/db/c-lightning listfunds
+
+read -r -d '' listfunds <<__EOF__
+{                                                                                                                                                                                        
+   "outputs": [                                                                                                                                                                          
+      {                                                                                                                                                                                  
+         "txid": "***txid1***",                                                                                                     
+         "output": 0,                                                                                                                                                                    
+         "value": 123456,
+         "amount_msat": "123456000msat",
+         "scriptpubkey": "***scriptpubkey***",
+         "address": "***address**",
+         "status": "confirmed",
+         "blockheight": 695394,
+         "reserved": false
+      },                                                                                                                                                                          
+      {                                                                                                                                                                                  
+         "txid": "***txid2***",                                                                                                     
+         "output": 0,                                                                                                                                                                    
+         "value": 123456,
+         "amount_msat": "123456000msat",
+         "scriptpubkey": "***scriptpubkey***",
+         "address": "***address**",
+         "status": "confirmed",
+         "blockheight": 695394,
+         "reserved": false
+      }
+   ],
+   "channels": [
+      {
+         "peer_id": "***peer_id1***",
+         "connected": true,
+         "state": "CHANNELD_NORMAL",
+         "short_channel_id": "***short_channel_id***",
+         "channel_sat": 222222,
+         "our_amount_msat": "222222000msat",
+         "channel_total_sat": 222222,
+         "amount_msat": "222222000msat",
+         "funding_txid": "***funding_txid***",
+         "funding_output": 1
+      },
+      {
+         "peer_id": "***peer_id2***",
+         "connected": true,
+         "state": "CHANNELD_NORMAL",
+         "short_channel_id": "***short_channel_id***",
+         "channel_sat": 111111,
+         "our_amount_msat": "1111111000msat",
+         "channel_total_sat": 1111111,
+         "amount_msat": "111111000msat",
+         "funding_txid": "***funding_txid***",
+         "funding_output": 1
+      }
+   ]
+}
+__EOF__
+
+echo $listfunds | jq
+
+
+echo 'total.label total (sat)'
+echo 'outputs.label outputs (sat)'
+echo 'channels.label channels (sat)'
+
+for txid in $(echo $listfunds | jq '.outputs[].txid'); do
+    echo "output_$(echo $txid | sha1sum | cut -c1-8).label ${txid}"
+done
+
+for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
+    echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label ${peerid}"
+done
+
+echo "total.value $(echo $listfunds | jq '[ .[] | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
+echo "outputs.value $(echo $listfunds | jq '[ .outputs | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 * -1')"
+echo "channels.value $(echo $listfunds | jq '[ .channels | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
+
+for txid in $(echo $listfunds | jq '.outputs[].txid'); do
+    printf "output_$(echo $txid | sha1sum | cut -c1-8).value "
+    echo $listfunds | jq ".outputs[] | select( .txid == "${txid}") | .value * -1"
+done
+
+for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
+    printf "peer_$(echo $peerid | sha1sum | cut -c1-8).value "
+    echo $listfunds | jq ".channels[] | select( .peer_id == "${peerid}") | .channel_sat"
+done
