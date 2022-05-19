@@ -53,7 +53,7 @@ listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 #          "value": 123456,
 #          "amount_msat": "123456000msat",
 #          "scriptpubkey": "***scriptpubkey***",
-#          "address": ""***address**",
+#          "address": "***address**",
 #          "status": "confirmed",
 #          "blockheight": 695394,
 #          "reserved": false
@@ -65,7 +65,7 @@ listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 #          "peer_id": "***peer_id***",
 #          "connected": true,
 #          "state": "CHANNELD_NORMAL",
-#          "short_channel_id": ""***short_channel_id***",
+#          "short_channel_id": "***short_channel_id***",
 #          "channel_sat": 123123,
 #          "our_amount_msat": "123123000msat",
 #          "channel_total_sat": 123123,
@@ -79,10 +79,10 @@ listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Channel count'
-    echo 'graph_vlabel number of channels'
+    echo 'graph_title Channel and funds'
+    echo 'graph_vlabel funds on channels and outputs'
     echo 'graph_category clightning'
-    echo 'graph_info This graph shows the number of open channels.'
+    echo 'graph_info This graph shows the sats available on open channels and remaining funds.'
     echo 'total.label total (sat)'
     echo 'outputs.label outputs (sat)'
     echo 'channels.label channels (sat)'
@@ -98,7 +98,7 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo "total.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .[] | .[].amount_msat  | sub("msat";"")  | tonumber // 0] | add / 1000')"
+echo "total.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .[] | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
 echo "outputs.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .outputs | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 * -1')"
 echo "channels.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .channels | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
 

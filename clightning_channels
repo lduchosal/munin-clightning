@@ -1,0 +1,87 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+clightning_channels - Plugin to monitor your channels on the lightning network
+
+=head1 CONFIGURATION
+
+ [clightning_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Dvchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ "$1" = "autoconf" ]; then
+    autoconf="yes"
+
+    command -v $BINARY >/dev/null || autoconf="no"
+
+    echo $autoconf
+    exit 0
+fi
+
+listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
+
+# lightning-cli --lightning-dir=/var/db/c-lightning listfunds
+# {
+#    "outputs": [ ... ],
+#    "channels": [
+#       {
+#          "peer_id": "***peer_id***",
+#          "connected": true,
+#          "state": "CHANNELD_NORMAL",
+#          "short_channel_id": "***short_channel_id***",
+#          "channel_sat": 123123,
+#          "our_amount_msat": "123123000msat",
+#          "channel_total_sat": 123123,
+#          "amount_msat": "123123000msat",
+#          "funding_txid": "***funding_txid***",
+#          "funding_output": 1
+#       },
+#       ...
+#    ]
+# }
+
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title Channel count'
+    echo 'graph_vlabel number of channels'
+    echo 'graph_category clightning'
+    echo 'graph_info This graph shows the number of open channels.'
+    echo 'total.label total'
+
+    for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
+        echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label ${peerid}"
+    done
+
+    exit 0
+fi
+
+echo "total.value $(echo $listfunds | jq '.channels | length')"
+i=0
+for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
+    ((i=i+1))
+    echo "peer_$(echo $peerid | sha1sum | cut -c1-8).value 1.$i"
+done
