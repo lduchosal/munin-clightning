@@ -1,0 +1,90 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+clightning_info - Plugin to monitor your c-lightning node
+
+=head1 CONFIGURATION
+
+ [clightning_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Dvchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ "$1" = "autoconf" ]; then
+    autoconf="yes"
+
+    command -v $BINARY >/dev/null || autoconf="no"
+
+    echo $autoconf
+    exit 0
+fi
+
+getinfo=$($BINARY --lightning-dir=$DATA_DIR getinfo)
+
+# lightning-cli --lightning-dir=/var/db/c-lightning getinfo
+# {
+#    "id": "***id***",
+#    "alias": ""***alias***",
+#    "color": "cc0000",
+#    "num_peers": 0,
+#    "num_pending_channels": 0,
+#    "num_active_channels": 0,
+#    "num_inactive_channels": 0,
+#    "address": [
+#       {
+#          "type": "torv3",
+#          "address": "***toraddress***",
+#          "port": 1234
+#       }
+#    ],
+#    "binding": [
+#       {
+#          "type": "ipv4",
+#          "address": "127.0.0.1",
+#          "port": 12312
+#       }
+#    ],
+#    "version": "***version***",
+#    "blockheight": 702140,
+#    "network": "bitcoin",
+#    "msatoshi_fees_collected": 0,
+#    "fees_collected_msat": "0msat",
+#    "lightning-dir": "/var/db/c-lightning/bitcoin",
+#    "warning_lightningd_sync": "Still loading latest blocks from bitcoind."
+# }
+
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title c-lightning current blockheight'
+    echo 'graph_vlabel blockheight'
+    echo 'graph_category clightning'
+    echo 'graph_info This graph shows the current blockheight reported by lightningd.'
+    echo 'blockheight.label current blockheight'
+
+    exit 0
+fi
+
+echo "blockheight.value $(echo $getinfo | jq '.blockheight"
