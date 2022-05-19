@@ -44,12 +44,12 @@ fi
 
 listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 
-# lightning-cli --lightning-dir=/var/db/c-lightning listfunds                                                                                 
-# {                                                                                                                                                                                        
-#    "outputs": [                                                                                                                                                                          
-#       {                                                                                                                                                                                  
-#          "txid": "***txid***",                                                                                                     
-#          "output": 0,                                                                                                                                                                    
+# lightning-cli --lightning-dir=/var/db/c-lightning listfunds
+# {
+#    "outputs": [
+#       {        
+#          "txid": "***txid***",
+#          "output": 0,
 #          "value": 123456,
 #          "amount_msat": "123456000msat",
 #          "scriptpubkey": "***scriptpubkey***",
