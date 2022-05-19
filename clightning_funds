@@ -98,9 +98,9 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo "total.value $(echo $listfunds | jq '[ .[] | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
-echo "outputs.value $(echo $listfunds | jq '[ .outputs | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 * -1')"
-echo "channels.value $(echo $listfunds | jq '[ .channels | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
+echo "total.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .[] | .[].amount_msat  | sub("msat";"")  | tonumber // 0] | add / 1000')"
+echo "outputs.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .outputs | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 * -1')"
+echo "channels.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .channels | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
 
 for txid in $(echo $listfunds | jq '.outputs[].txid'); do
     printf "output_$(echo $txid | sha1sum | cut -c1-8).value "
