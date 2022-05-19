@@ -78,6 +78,77 @@ listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 # }
 
 
+read -r -d '' jsont <<__EOF__
+{
+   "txids": [
+      .outputs[].txid
+   ],
+
+   "peer_ids": [
+      .channels[].peer_id
+   ],
+
+   "total_funds": 
+      [ [ .[] | .[].amount_msat , "0" | sub("msat";"")  | tonumber ] | add / 1000 ][0],
+
+   "total_channels":
+      [ [ "0", .channels[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 ][0],
+
+   "total_outpouts":
+      [ [ "0", .outputs[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 ][0],
+
+   "channels": [ .channels[] | {
+         "peer_id": .peer_id,
+         "amount_msat": [ .amount_msat | sub("msat";"") | tonumber / 1000 ] [0]
+      }],
+
+   "outputs": [ .outputs[] | {
+         "txid": .txid,
+         "amount_msat": [ .amount_msat | sub("msat";"") | tonumber / 1000 ] [0]
+      }]
+   
+}
+__EOF__
+
+result=$(echo $listfunds | jq "$(echo $jsont)")
+
+# echo $result | jq
+# 
+# {
+#   "txids": [
+#     "***txid1***",
+#     "***txid2***"
+#   ],
+#   "peer_ids": [
+#     "***peer_id1***",
+#     "***peer_id2***"
+#   ],
+#   "total_funds": 580245,
+#   "total_channels": 333333,
+#   "total_outpouts": 246912,
+#   "channels": [
+#     {
+#       "peer_id": "***peer_id1***",
+#       "amount_msat": 222222
+#     },
+#     {
+#       "peer_id": "***peer_id2***",
+#       "amount_msat": 111111
+#     }
+#   ],
+#   "outputs": [
+#     {
+#       "txid": "***txid1***",
+#       "amount_msat": 123456
+#     },
+#     {
+#       "txid": "***txid2***",
+#       "amount_msat": 123456
+#     }
+#   ]
+# }
+
+
 if [ "$1" = "config" ]; then
     echo 'graph_title Channel and funds'
     echo 'graph_vlabel funds on channels and outputs'
@@ -87,27 +158,29 @@ if [ "$1" = "config" ]; then
     echo 'outputs.label outputs (sat)'
     echo 'channels.label channels (sat)'
 
-    for txid in $(echo $listfunds | jq '.outputs[].txid'); do
+    for txid in $(echo $result | jq '.txids[]'); do
         echo "output_$(echo $txid | sha1sum | cut -c1-8).label ${txid}"
     done
 
-    for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
+    for peerid in $(echo $result | jq '.peer_ids[]'); do
         echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label ${peerid}"
     done
 
     exit 0
 fi
 
-echo "total.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .[] | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
-echo "outputs.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .outputs | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 * -1')"
-echo "channels.value $(echo $listfunds | jq '[ [ { "amount_msat" : "0msat" } ], .channels | .[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000')"
+echo "total.value $(echo $result | jq '.total_funds')"
+echo "outputs.value $(echo $result | jq '.total_outpouts')"
+echo "channels.value $(echo $result | jq '.total_channels')"
 
-for txid in $(echo $listfunds | jq '.outputs[].txid'); do
-    printf "output_$(echo $txid | sha1sum | cut -c1-8).value "
-    echo $listfunds | jq ".outputs[] | select( .txid == "${txid}") | .value * -1"
+for output in $(echo $result | jq -c '.outputs[]'); do
+   id=$(echo $output | jq ".txid")
+   value=$(echo $output | jq ".amount_msat * -1")
+   echo "output_$(echo $id | sha1sum | cut -c1-8).value $value"
 done
 
-for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
-    printf "peer_$(echo $peerid | sha1sum | cut -c1-8).value "
-    echo $listfunds | jq ".channels[] | select( .peer_id == "${peerid}") | .channel_sat"
+for channel in $(echo $result | jq -c '.channels[]'); do
+   id=$(echo $channel | jq ".peer_id")
+   value=$(echo $channel | jq ".amount_msat")
+   echo "peer_$(echo $id | sha1sum | cut -c1-8).value $value"
 done
