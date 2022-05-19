@@ -78,22 +78,61 @@ jsont=$(cat <<__EOF__
    ],
 
    "total_funds": 
-      [ [ .[] | .[].amount_msat , "0" | sub("msat";"")  | tonumber ] | add / 1000 ][0],
+      [ 
+         [ 
+            "0", 
+            .channels[].amount_msat, 
+            .outputs[].amount_msat
+               | sub("msat";"")  
+               | tonumber 
+         ] 
+         | add 
+         / 1000 
+      ][0],
 
    "total_channels":
-      [ [ "0", .channels[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 ][0],
+      [ 
+         [ 
+            "0", 
+            .channels[].amount_msat  
+               | sub("msat";"")  
+               | tonumber 
+         ] 
+         | add 
+         / 1000 
+      ][0],
 
    "total_outpouts":
-      [ [ "0", .outputs[].amount_msat  | sub("msat";"")  | tonumber ] | add / 1000 ][0],
+      [ 
+         [ 
+            "0", 
+            .outputs[].amount_msat  
+               | sub("msat";"")  
+               | tonumber 
+         ] 
+         | add 
+         / 1000 
+      ][0],
 
-   "channels": [ .channels[] | {
+   "channels": [ 
+      .channels[] | {
          "peer_id": .peer_id,
-         "amount_msat": [ .amount_msat | sub("msat";"") | tonumber / 1000 ] [0]
+         "amount_msat": [ 
+            .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000 
+            ][0]
       }],
 
    "outputs": [ .outputs[] | {
          "txid": .txid,
-         "amount_msat": [ .amount_msat | sub("msat";"") | tonumber / 1000 ] [0]
+         "amount_msat": [ 
+            .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ][0]
       }]
       
    
