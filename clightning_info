@@ -43,6 +43,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 getinfo=$($BINARY --lightning-dir=$DATA_DIR getinfo)
+getchaininfo=$($BINARY --lightning-dir=$DATA_DIR getchaininfo)
 
 # lightning-cli --lightning-dir=/var/db/c-lightning getinfo
 # {
@@ -77,14 +78,25 @@ getinfo=$($BINARY --lightning-dir=$DATA_DIR getinfo)
 # }
 
 
+# lightning-cli --lightning-dir=/var/db/c-lightning getchaininfo
+# {
+#    "chain": "main",
+#    "headercount": 737039,
+#    "blockcount": 737039,
+#    "ibd": false
+# }
+
+
 if [ "$1" = "config" ]; then
-    echo 'graph_title c-lightning current blockheight'
-    echo 'graph_vlabel blockheight'
+    echo 'graph_title c-lightning chain info'
+    echo 'graph_vlabel blocks'
     echo 'graph_category clightning'
-    echo 'graph_info This graph shows the current blockheight reported by lightningd.'
-    echo 'blockheight.label current blockheight'
+    echo 'graph_info This graph shows the info reported by lightningd.'
+    echo "clightning_blockheight.label clightning current blockheight ($(echo $getinfo | jq '.network'))'"
+    echo "chain_blockcount.label bitcoin blockcount ($(echo $getchaininfo | jq '.chain'))'"
 
     exit 0
 fi
 
-echo "blockheight.value $(echo $getinfo | jq '.blockheight"
+echo "clightning_blockheight.value $(echo $getinfo | jq '.blockheight')"
+echo "chain_blockcount.value $(echo $getchaininfo | jq '.blockcount')"
