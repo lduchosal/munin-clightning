@@ -78,7 +78,7 @@ listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 # }
 
 
-read -r -d '' jsont <<__EOF__
+jsont=$(cat <<__EOF__
 {
    "txids": [
       .outputs[].txid
@@ -109,6 +109,7 @@ read -r -d '' jsont <<__EOF__
    
 }
 __EOF__
+)
 
 result=$(echo $listfunds | jq "$(echo $jsont)")
 

@@ -4,7 +4,7 @@
 
 # lightning-cli --lightning-dir=/var/db/c-lightning listfunds
 
-read -r -d '' listfunds <<__EOF__
+listfunds=$(cat <<__EOF__
 {                                                                                                                                                                                        
    "outputs": [                                                                                                                                                                          
       {                                                                                                                                                                                  
@@ -58,7 +58,7 @@ read -r -d '' listfunds <<__EOF__
    ]
 }
 __EOF__
-
+)
 
 # read -r -d '' listfunds <<__EOF__
 # {
@@ -67,7 +67,7 @@ __EOF__
 # }
 # __EOF__
 
-read -r -d '' jsont <<__EOF__
+jsont=$(cat <<__EOF__
 {
    "txids": [
       .outputs[].txid
@@ -99,7 +99,7 @@ read -r -d '' jsont <<__EOF__
    
 }
 __EOF__
-
+)
 
 echo $listfunds | jq
 result=$(echo $listfunds | jq "$(echo $jsont)")
