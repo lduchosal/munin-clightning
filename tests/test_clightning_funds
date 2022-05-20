@@ -136,9 +136,9 @@ echo $listfunds | jq
 result=$(echo $listfunds | jq "$(echo $jsont)")
 echo $result | jq
 
-echo 'total.label total (sat)'
-echo 'outputs.label outputs (sat)'
-echo 'channels.label channels (sat)'
+echo 'total.label total'
+echo 'outputs.label outputs'
+echo 'channels.label channels'
 
 for item in $(echo $result | jq -c '.outputs[]'); do
    id=$(echo $item | jq ".id")
