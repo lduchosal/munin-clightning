@@ -77,16 +77,12 @@ if [ "$1" = "test" ]; then
       },
       {
          "in_channel": "694360x1604x1",
-         "out_channel": "694393x176x1",
-         "in_msatoshi": 500006000,
-         "in_msat": "500006000msat",
-         "out_msatoshi": 500000000,
-         "out_msat": "500000000msat",
-         "fee": 6000,
-         "fee_msat": "6000msat",
+         "in_msatoshi": 214006035,
+         "in_msat": "214006035msat",
          "status": "local_failed",
-         "received_time": 1628388383.738,
-         "resolved_time": 1628388386.077
+         "failcode": 4103,
+         "failreason": "WIRE_TEMPORARY_CHANNEL_FAILURE",
+         "received_time": 1632921866.300
       }
    ]
 }
@@ -112,6 +108,7 @@ jsont=$(cat <<__EOF__
    "total": [
       [ 
          .forwards[] 
+            | select(.fee)
             | .fee 
             / 1000
       ], [0]
@@ -123,6 +120,7 @@ jsont=$(cat <<__EOF__
       [ 
          .forwards[] 
             | select(.status == "settled")
+            | select(.fee)
             | .fee 
             / 1000
       ], [0]
@@ -134,6 +132,7 @@ jsont=$(cat <<__EOF__
       [ 
          .forwards[] 
             | select(.status == "failed")
+            | select(.fee)
             | .fee 
             / 1000
       ], [0]

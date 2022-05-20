@@ -120,7 +120,7 @@ jsont=$(cat <<__EOF__
    | add,
 
    
-   "out": [
+   "out": [[
       [ 
          .forwards[] 
             | .out_msatoshi 
@@ -129,7 +129,7 @@ jsont=$(cat <<__EOF__
    ] 
    | add 
    | add
-   * -1
+   * -1 ] [0]
 
    
 }
