@@ -274,7 +274,14 @@ fi
 
 jsont=$(cat <<__EOF__
 {
-   "total_peers": .peers | length,
+   "total": [
+      [ "0", .peers[].channels[].total_msat 
+         | sub("msat";"") 
+         | tonumber 
+      ] 
+      | add 
+      / 1000 
+   ][0],
 
    "peers": [ 
       .peers[] | {
@@ -320,7 +327,7 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo "total.value $(echo $result | jq -r '.total_funds')"
+echo "total.value $(echo $result | jq -r '.total')"
 
 for item in $(echo $result | jq -c '.peers[]'); do
    id=$(echo $item | jq -r ".id")
