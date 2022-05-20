@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-clightning_invoices - Plugin to monitor your invoices on the lightning network
+clightning_invoices_amount - Plugin to monitor your invoices on the lightning network
 
 =head1 CONFIGURATION
 
@@ -94,9 +94,38 @@ fi
 
 jsont=$(cat <<__EOF__
 {
-   "total": [ .invoices[] ] | length,
-   "expired": [ .invoices[] | select(.status == "expired") ] | length,
-   "paid": [ .invoices[] | select(.status == "paid") ] | length,
+   "total": [
+      [ 
+         .invoices[] 
+            | .msatoshi 
+      ], 
+      [0]
+   ] 
+      | add 
+      | add,
+
+   "expired": [
+      [ 
+         .invoices[] 
+            | select(.status == "expired") 
+            | .msatoshi 
+      ], 
+      [0]
+   ] 
+      | add 
+      | add,
+
+   "paid": [
+      [ 
+         .invoices[] 
+            | select(.status == "paid") 
+            | .msatoshi 
+      ], 
+      [0]
+   ] 
+      | add 
+      | add,
+
 }
 __EOF__
 )
@@ -110,9 +139,9 @@ fi
 
 if [ "$1" = "config" ]; then
     echo 'graph_title Invoices'
-    echo 'graph_vlabel invoices'
+    echo 'graph_vlabel sats'
     echo 'graph_category clightning'
-    echo 'graph_info This graph shows the invoices on your clightning node.'
+    echo 'graph_info This graph shows the total invoices on your clightning node.'
     
     echo 'total.label total'
     echo 'expired.label expired'
