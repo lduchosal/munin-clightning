@@ -98,5 +98,5 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo "clightning_blockheight.value $(echo $getinfo | jq '.blockheight')"
-echo "chain_blockcount.value $(echo $getchaininfo | jq '.blockcount')"
+echo "clightning_blockheight.value $(echo $getinfo | jq -r '.blockheight')"
+echo "chain_blockcount.value $(echo $getchaininfo | jq -r '.blockcount')"

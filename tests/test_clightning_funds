@@ -136,23 +136,23 @@ echo $listfunds | jq
 result=$(echo $listfunds | jq "$(echo $jsont)")
 echo $result | jq
 
-echo 'total.label total'
-echo 'outputs.label outputs'
-echo 'channels.label channels'
+   echo 'total.label total'
+   echo 'outputs.label outputs'
+   echo 'channels.label channels'
 
-for item in $(echo $result | jq -c '.outputs[]'); do
-   id=$(echo $item | jq -r ".id")
-   label=$(echo $item | jq -r ".label")
-   value=$(echo $item | jq -r ".value * -1")
-   echo "output_$(echo $id | sha1sum | cut -c1-8).label out ${label}"
-done
+   for item in $(echo $result | jq -c '.outputs[]'); do
+      id=$(echo $item | jq -r ".id")
+      label=$(echo $item | jq -r ".label")
+      value=$(echo $item | jq -r ".value * -1")
+      echo "output_$(echo $id | sha1sum | cut -c1-8).label out ${label}"
+   done
 
-for item in $(echo $result | jq -c '.channels[]'); do
-   id=$(echo $item | jq -r ".id")
-   label=$(echo $item | jq -r ".label")
-   value=$(echo $item | jq -r ".value")
-   echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label chan ${label}"
-done
+   for item in $(echo $result | jq -c '.channels[]'); do
+      id=$(echo $item | jq -r ".id")
+      label=$(echo $item | jq -r ".label")
+      value=$(echo $item | jq -r ".value")
+      echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label chan ${label}"
+   done
 
 echo "total.value $(echo $result | jq -r '.total_funds')"
 echo "outputs.value $(echo $result | jq -r '.total_outpouts')"
@@ -171,3 +171,8 @@ for item in $(echo $result | jq -c '.channels[]'); do
    value=$(echo $item | jq -r ".value")
    echo "peer_$(echo $id | sha1sum | cut -c1-8).value $value"
 done
+
+i=0
+echo "i: $i"
+((i=$i+1))
+echo "i: $i"

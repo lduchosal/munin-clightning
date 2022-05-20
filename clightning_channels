@@ -73,8 +73,8 @@ if [ "$1" = "config" ]; then
     echo 'total.label total'
     
     i=0
-    for short_channel_id in $(echo $listfunds | jq '.channels[].short_channel_id'); do
-        ((i=i+1))
+    for short_channel_id in $(echo $listfunds | jq -r '.channels[].short_channel_id'); do
+        ((i=$i+1))
         echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).label chan$i ${short_channel_id}"
     done
 
@@ -84,6 +84,6 @@ fi
 echo "total.value $(echo $listfunds | jq '.channels | length')"
 i=0
 for short_channel_id in $(echo $listfunds | jq '.channels[].short_channel_id'); do
-    ((i=i+1))
+    ((i=$i+1))
     echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).value 1.$i"
 done
