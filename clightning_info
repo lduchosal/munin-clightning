@@ -45,46 +45,54 @@ fi
 getinfo=$($BINARY --lightning-dir=$DATA_DIR getinfo)
 getchaininfo=$($BINARY --lightning-dir=$DATA_DIR getchaininfo)
 
-# lightning-cli --lightning-dir=/var/db/c-lightning getinfo
-# {
-#    "id": "***id***",
-#    "alias": ""***alias***",
-#    "color": "cc0000",
-#    "num_peers": 0,
-#    "num_pending_channels": 0,
-#    "num_active_channels": 0,
-#    "num_inactive_channels": 0,
-#    "address": [
-#       {
-#          "type": "torv3",
-#          "address": "***toraddress***",
-#          "port": 1234
-#       }
-#    ],
-#    "binding": [
-#       {
-#          "type": "ipv4",
-#          "address": "127.0.0.1",
-#          "port": 12312
-#       }
-#    ],
-#    "version": "***version***",
-#    "blockheight": 702140,
-#    "network": "bitcoin",
-#    "msatoshi_fees_collected": 0,
-#    "fees_collected_msat": "0msat",
-#    "lightning-dir": "/var/db/c-lightning/bitcoin",
-#    "warning_lightningd_sync": "Still loading latest blocks from bitcoind."
-# }
 
+if [ "$1" = "test2" ]; then
 
-# lightning-cli --lightning-dir=/var/db/c-lightning getchaininfo
-# {
-#    "chain": "main",
-#    "headercount": 737039,
-#    "blockcount": 737039,
-#    "ibd": false
-# }
+   getinfo=$(cat <<__EOF__
+{
+   "id": "***id***",
+   "alias": ""***alias***",
+   "color": "cc0000",
+   "num_peers": 0,
+   "num_pending_channels": 0,
+   "num_active_channels": 0,
+   "num_inactive_channels": 0,
+   "address": [
+      {
+         "type": "torv3",
+         "address": "***toraddress***",
+         "port": 1234
+      }
+   ],
+   "binding": [
+      {
+         "type": "ipv4",
+         "address": "127.0.0.1",
+         "port": 12312
+      }
+   ],
+   "version": "***version***",
+   "blockheight": 702140,
+   "network": "bitcoin",
+   "msatoshi_fees_collected": 0,
+   "fees_collected_msat": "0msat",
+   "lightning-dir": "/var/db/c-lightning/bitcoin",
+   "warning_lightningd_sync": "Still loading latest blocks from bitcoind."
+}
+__EOF__
+)
+
+   getchaininfo=$(cat <<__EOF__
+{
+   "chain": "main",
+   "headercount": 737039,
+   "blockcount": 737039,
+   "ibd": false
+}
+__EOF__
+)
+
+fi
 
 
 if [ "$2" = "debug" ]; then

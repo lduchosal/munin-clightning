@@ -42,6 +42,10 @@ if [ "$1" = "autoconf" ]; then
     exit 0
 fi
 
+if [ "$1" = "debug" ]; then
+    echo $listfunds | jq
+fi
+
 listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 
 # lightning-cli --lightning-dir=/var/db/c-lightning listfunds
