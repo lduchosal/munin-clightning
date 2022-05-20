@@ -1,0 +1,83 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+clightning_info - Plugin to monitor your c-lightning node
+
+=head1 CONFIGURATION
+
+ [clightning_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Dvchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ "$1" = "autoconf" ]; then
+    autoconf="yes"
+
+    command -v $BINARY >/dev/null || autoconf="no"
+
+    echo $autoconf
+    exit 0
+fi
+
+getlog=$($BINARY --lightning-dir=$DATA_DIR getlog)
+
+if [ "$1" = "test2" ]; then
+
+   getlog=$(cat <<__EOF__
+{
+   "created_at": "1636312237.922762998",
+   "bytes_used": 8582351,
+   "bytes_max": 10485760,
+   "log": [
+      {
+         "type": "SKIPPED",
+         "num_skipped": 30934356
+      }
+   ]
+}
+__EOF__
+)
+
+fi
+
+
+if [ "$2" = "debug" ]; then
+    echo $getlog | jq
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title c-lightning log'
+    echo 'graph_vlabel bytes'
+    echo 'graph_category clightning'
+    echo 'graph_info This graph shows the log info reported by lightningd.'
+    echo "bytes_used.label used"
+    echo "bytes_max.label max"
+
+    exit 0
+fi
+
+echo "bytes_used.value $(echo $getlog | jq -r '.bytes_used')"
+echo "bytes_max.value $(echo $getlog | jq -r '.bytes_max')"
