@@ -1,0 +1,117 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+clightning_info - Plugin to monitor your c-lightning node
+
+=head1 CONFIGURATION
+
+ [clightning_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Dvchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ "$1" = "autoconf" ]; then
+    autoconf="yes"
+
+    command -v $BINARY >/dev/null || autoconf="no"
+
+    echo $autoconf
+    exit 0
+fi
+
+feerates=$($BINARY --lightning-dir=$DATA_DIR feerates perkb)
+
+if [ "$1" = "test2" ]; then
+
+   feerates=$(cat <<__EOF__
+{
+   "perkb": {
+      "opening": 1940,
+      "mutual_close": 1012,
+      "unilateral_close": 2560,
+      "delayed_to_us": 1940,
+      "htlc_resolution": 2560,
+      "penalty": 1940,
+      "min_acceptable": 1012,
+      "max_acceptable": 142152
+   },
+   "onchain_fee_estimates": {
+      "opening_channel_satoshis": 340,
+      "mutual_close_satoshis": 170,
+      "unilateral_close_satoshis": 382,
+      "htlc_timeout_satoshis": 424,
+      "htlc_success_satoshis": 449
+   }
+}
+__EOF__
+)
+
+fi
+
+
+if [ "$2" = "debug" ]; then
+    echo $getlog | jq
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title c-lightning log'
+    echo 'graph_vlabel sat'
+    echo 'graph_category clightning'
+    echo 'graph_info This graph shows the feerates perkb reported by lightningd.'
+
+    echo "perkb_opening.label opening"
+    echo "perkb_mutual_close.label mutual_close"
+    echo "perkb_unilateral_close.label unilateral_close"
+    echo "perkb_delayed_to_us.label delayed_to_us"
+    echo "perkb_htlc_resolution.label htlc_resolution"
+    echo "perkb_penalty.label penalty"
+    echo "perkb_min_acceptable.label min_acceptable"
+    echo "perkb_max_acceptable.label max_acceptable"
+    
+    echo "onchain_opening.label onchain_opening"
+    echo "onchain_mutual_close.label onchain_mutual_close"
+    echo "onchain_unilateral_close.label onchain_unilateral_close"
+    echo "onchain_htlc_timeout.label onchain_htlc_timeout"
+    echo "onchain_htlc_success.label onchain_htlc_success"
+
+    exit 0
+fi
+
+
+echo "perkb_opening.value $(echo $feerates | jq -r '.perkb.opening')"
+echo "perkb_mutual_close.value $(echo $feerates | jq -r '.perkb.perkb_mutual_close')"
+echo "perkb_unilateral_close.value $(echo $feerates | jq -r '.perkb.unilateral_close')"
+echo "perkb_delayed_to_us.value $(echo $feerates | jq -r '.perkb.delayed_to_us')"
+echo "perkb_htlc_resolution.value $(echo $feerates | jq -r '.perkb.htlc_resolution')"
+echo "perkb_penalty.value $(echo $feerates | jq -r '.perkb.perkb_penalty')"
+echo "perkb_min_acceptable.value $(echo $feerates | jq -r '.perkb.min_acceptable')"
+echo "perkb_max_acceptable.value $(echo $feerates | jq -r '.perkb.max_acceptable')"
+
+echo "onchain_opening.value $(echo $feerates | jq -r '.onchain_fee_estimates.opening_channel_satoshis')"
+echo "onchain_mutual_close.value $(echo $feerates | jq -r '.onchain_fee_estimates.mutual_close_satoshis')"
+echo "onchain_unilateral_close.value $(echo $feerates | jq -r '.onchain_fee_estimates.unilateral_close_satoshis')"
+echo "onchain_htlc_timeout.value $(echo $feerates | jq -r '.onchain_fee_estimates.htlc_timeout_satoshis')"
+echo "onchain_htlc_success.value $(echo $feerates | jq -r '.onchain_fee_estimates.htlc_success_satoshis')"
