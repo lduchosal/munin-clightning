@@ -100,7 +100,18 @@ fi
 jsont=$(cat <<__EOF__
 {
 
-   "total": [ .pays[] ] | length,
+   "total": [
+      [ 
+         .pays[] 
+            | .amount_msat 
+            | sub("msat";"") 
+            | tonumber 
+            / 1000
+      ], [0]
+   ] 
+      | add 
+      | add,
+
    
    "complete": [
       [ 
@@ -109,6 +120,7 @@ jsont=$(cat <<__EOF__
             | .amount_msat 
             | sub("msat";"") 
             | tonumber 
+            / 1000
       ], [0]
    ] 
       | add 
@@ -122,6 +134,7 @@ jsont=$(cat <<__EOF__
             | .amount_msat 
             | sub("msat";"") 
             | tonumber 
+            / 1000
       ], [0]
    ] 
       | add 
@@ -136,6 +149,7 @@ jsont=$(cat <<__EOF__
             | .amount_msat 
             | sub("msat";"") 
             | tonumber 
+            / 1000
       ], [0]
    ] 
       | add 
