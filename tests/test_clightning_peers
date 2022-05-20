@@ -222,10 +222,18 @@ listpeers2=$(cat <<__EOF__
    "peers": []
 }
 __EOF__
+)
 
 jsont=$(cat <<__EOF__
 {
-   "total_peers": .peers | length,
+   "total": [
+      [ "0", .peers[].channels[].total_msat 
+         | sub("msat";"") 
+         | tonumber 
+      ] 
+      | add 
+      / 1000 
+   ][0],
 
    "peers": [ 
       .peers[] | {
@@ -260,7 +268,7 @@ echo $result | jq
       echo "peer_$(echo $id | sha1sum | cut -c1-8).label $label"
    done
 
-echo "total.value $(echo $result | jq -r '.total_funds')"
+echo "total.value $(echo $result | jq -r '.total')"
 
 for item in $(echo $result | jq -c '.peers[]'); do
    id=$(echo $item | jq -r ".id")
