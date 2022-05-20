@@ -127,8 +127,9 @@ jsont=$(cat <<__EOF__
 
    "channels": [ 
       .channels[] | {
-         "peer_id": .peer_id,
-         "amount_msat": [ 
+         "id": .peer_id,
+         "label": .short_channel_id,
+         "value": [ 
             .amount_msat 
                | sub("msat";"") 
                | tonumber 
@@ -137,8 +138,9 @@ jsont=$(cat <<__EOF__
       }],
 
    "outputs": [ .outputs[] | {
-         "txid": .txid,
-         "amount_msat": [ 
+         "id": .txid,
+         "label": .address,
+         "value": [ 
             .amount_msat 
                | sub("msat";"") 
                | tonumber 
@@ -190,12 +192,12 @@ result=$(echo $listfunds | jq "$(echo $jsont)")
 
 if [ "$1" = "config" ]; then
     echo 'graph_title Channel and funds'
-    echo 'graph_vlabel funds on channels and outputs'
+    echo 'graph_vlabel sats'
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the sats available on open channels and remaining funds.'
-    echo 'total.label total (sat)'
-    echo 'outputs.label outputs (sat)'
-    echo 'channels.label channels (sat)'
+    echo 'total.label total'
+    echo 'outputs.label outputs'
+    echo 'channels.label channels'
 
     for txid in $(echo $result | jq '.txids[]'); do
         echo "output_$(echo $txid | sha1sum | cut -c1-8).label ${txid}"

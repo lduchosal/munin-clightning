@@ -69,14 +69,6 @@ __EOF__
 
 jsont=$(cat <<__EOF__
 {
-   "txids": [
-      .outputs[].txid
-   ],
-
-   "peer_ids": [
-      .channels[].peer_id
-   ],
-
    "total_funds": 
       [ 
          [ 
@@ -116,8 +108,9 @@ jsont=$(cat <<__EOF__
 
    "channels": [ 
       .channels[] | {
-         "peer_id": .peer_id,
-         "amount_msat": [ 
+         "id": .peer_id,
+         "label": .short_channel_id,
+         "value": [ 
             .amount_msat 
                | sub("msat";"") 
                | tonumber 
@@ -126,16 +119,15 @@ jsont=$(cat <<__EOF__
       }],
 
    "outputs": [ .outputs[] | {
-         "txid": .txid,
-         "amount_msat": [ 
+         "id": .txid,
+         "label": .address,
+         "value": [ 
             .amount_msat 
                | sub("msat";"") 
                | tonumber 
                / 1000
          ][0]
       }]
-      
-   
 }
 __EOF__
 )
@@ -144,31 +136,38 @@ echo $listfunds | jq
 result=$(echo $listfunds | jq "$(echo $jsont)")
 echo $result | jq
 
-
 echo 'total.label total (sat)'
 echo 'outputs.label outputs (sat)'
 echo 'channels.label channels (sat)'
 
-for txid in $(echo $result | jq '.txids[]'); do
-    echo "output_$(echo $txid | sha1sum | cut -c1-8).label ${txid}"
+for item in $(echo $result | jq -c '.outputs[]'); do
+   id=$(echo $item | jq ".id")
+   label=$(echo $item | jq ".label")
+   value=$(echo $item | jq ".value * -1")
+   echo "output_$(echo $id | sha1sum | cut -c1-8).label out ${label}"
 done
 
-for peerid in $(echo $result | jq '.peer_ids[]'); do
-    echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label ${peerid}"
+for item in $(echo $result | jq -c '.channels[]'); do
+   id=$(echo $item | jq ".id")
+   label=$(echo $item | jq ".label")
+   value=$(echo $item | jq ".value")
+   echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label chan ${label}"
 done
 
 echo "total.value $(echo $result | jq '.total_funds')"
 echo "outputs.value $(echo $result | jq '.total_outpouts')"
 echo "channels.value $(echo $result | jq '.total_channels')"
 
-for output in $(echo $result | jq -c '.outputs[]'); do
-   id=$(echo $output | jq ".txid")
-   value=$(echo $output | jq ".amount_msat * -1")
+for item in $(echo $result | jq -c '.outputs[]'); do
+   id=$(echo $item | jq ".id")
+   label=$(echo $item | jq ".label")
+   value=$(echo $item | jq ".value * -1")
    echo "output_$(echo $id | sha1sum | cut -c1-8).value $value"
 done
 
-for channel in $(echo $result | jq -c '.channels[]'); do
-   id=$(echo $channel | jq ".peer_id")
-   value=$(echo $channel | jq ".amount_msat")
+for item in $(echo $result | jq -c '.channels[]'); do
+   id=$(echo $item | jq ".id")
+   label=$(echo $item | jq ".label")
+   value=$(echo $item | jq ".value")
    echo "peer_$(echo $id | sha1sum | cut -c1-8).value $value"
 done

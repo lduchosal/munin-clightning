@@ -71,9 +71,11 @@ if [ "$1" = "config" ]; then
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the number of open channels.'
     echo 'total.label total'
-
-    for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
-        echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label ${peerid}"
+    
+    i=0
+    for short_channel_id in $(echo $listfunds | jq '.channels[].short_channel_id'); do
+        ((i=i+1))
+        echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).label chan$i ${short_channel_id}"
     done
 
     exit 0
@@ -81,7 +83,7 @@ fi
 
 echo "total.value $(echo $listfunds | jq '.channels | length')"
 i=0
-for peerid in $(echo $listfunds | jq '.channels[].peer_id'); do
+for short_channel_id in $(echo $listfunds | jq '.channels[].short_channel_id'); do
     ((i=i+1))
-    echo "peer_$(echo $peerid | sha1sum | cut -c1-8).value 1.$i"
+    echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).value 1.$i"
 done
