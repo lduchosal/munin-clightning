@@ -1,0 +1,126 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+clightning_invoices - Plugin to monitor your invoices on the lightning network
+
+=head1 CONFIGURATION
+
+ [clightning_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Dvchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ "$1" = "autoconf" ]; then
+    autoconf="yes"
+
+    command -v $BINARY >/dev/null || autoconf="no"
+
+    echo $autoconf
+    exit 0
+fi
+
+listinvoices=$($BINARY --lightning-dir=$DATA_DIR listinvoices)
+
+if [ "$1" = "test" ]; then
+
+   listinvoices=$(cat <<__EOF__
+{
+    "invoices": [
+       {
+          "label": "label",
+          "bolt11": "bolt11",
+          "payment_hash": "payment_hash",
+          "msatoshi": 1000000,
+          "amount_msat": "1000000msat",
+          "status": "paid",
+          "pay_index": 1,
+          "msatoshi_received": 1000000,
+          "amount_received_msat": "1000000msat",
+          "paid_at": 1628239212,
+          "payment_preimage": "payment_preimage",
+          "description": "invoice",
+          "expires_at": 1628843931
+       },
+      {
+         "label": "label",
+         "bolt11": "bolt11",
+         "payment_hash": "payment_hash",
+         "msatoshi": 1000,
+         "amount_msat": "1000msat",
+         "status": "expired",
+         "description": "un",
+         "expires_at": 1632083433
+      }
+   ]
+}
+__EOF__
+)
+
+fi
+
+if [ "$1" = "test2" ]; then
+
+   listinvoices=$(cat <<__EOF__
+{
+   "invoices": []
+}
+__EOF__
+)
+
+fi
+
+jsont=$(cat <<__EOF__
+{
+   "total": [ .invoices[] ] | length,
+   "expired": [ .invoices[] | select(.status == "expired") ] | length,
+   "paid": [ .invoices[] | select(.status == "paid") ] | length,
+}
+__EOF__
+)
+
+result=$(echo $listinvoices | jq "$(echo $jsont)")
+
+if [ "$2" = "debug" ]; then
+    echo $listinvoices | jq
+    echo $result | jq
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title Invoices'
+    echo 'graph_vlabel sats'
+    echo 'graph_category clightning'
+    echo 'graph_info This graph shows the invoices on your clightning node.'
+    
+    echo 'total.label total'
+    echo 'expired.label expired'
+    echo 'paid.label paid'
+
+    exit 0
+fi
+
+echo "total.value $(echo $result | jq -r '.total')"
+echo "expired.value $(echo $result | jq -r '.expired')"
+echo "paid.value $(echo $result | jq -r '.paid')"

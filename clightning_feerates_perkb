@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-clightning_info - Plugin to monitor your c-lightning node
+clightning_feerates_perkb - Plugin to monitor your c-lightning node
 
 =head1 CONFIGURATION
 
@@ -102,7 +102,7 @@ fi
 
 
 echo "perkb_opening.value $(echo $feerates | jq -r '.perkb.opening')"
-echo "perkb_mutual_close.value $(echo $feerates | jq -r '.perkb.perkb_mutual_close')"
+echo "perkb_mutual_close.value $(echo $feerates | jq -r '.perkb.mutual_close')"
 echo "perkb_unilateral_close.value $(echo $feerates | jq -r '.perkb.unilateral_close')"
 echo "perkb_delayed_to_us.value $(echo $feerates | jq -r '.perkb.delayed_to_us')"
 echo "perkb_htlc_resolution.value $(echo $feerates | jq -r '.perkb.htlc_resolution')"

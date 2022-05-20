@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-clightning_info - Plugin to monitor your c-lightning node
+clightning_feerates_perkw - Plugin to monitor your c-lightning node
 
 =head1 CONFIGURATION
 
