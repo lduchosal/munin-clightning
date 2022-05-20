@@ -77,8 +77,8 @@ if [ "$2" = "debug" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title c-lightning log'
-    echo 'graph_vlabel sat'
+    echo 'graph_title c-lightning feerates perkw'
+    echo 'graph_vlabel sats'
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the feerates perkw reported by lightningd.'
 
@@ -102,11 +102,11 @@ fi
 
 
 echo "perkw_opening.value $(echo $feerates | jq -r '.perkw.opening')"
-echo "perkw_mutual_close.value $(echo $feerates | jq -r '.perkw.perkw_mutual_close')"
+echo "perkw_mutual_close.value $(echo $feerates | jq -r '.perkw.mutual_close')"
 echo "perkw_unilateral_close.value $(echo $feerates | jq -r '.perkw.unilateral_close')"
 echo "perkw_delayed_to_us.value $(echo $feerates | jq -r '.perkw.delayed_to_us')"
 echo "perkw_htlc_resolution.value $(echo $feerates | jq -r '.perkw.htlc_resolution')"
-echo "perkw_penalty.value $(echo $feerates | jq -r '.perkw.perkw_penalty')"
+echo "perkw_penalty.value $(echo $feerates | jq -r '.perkw.penalty')"
 echo "perkw_min_acceptable.value $(echo $feerates | jq -r '.perkw.min_acceptable')"
 echo "perkw_max_acceptable.value $(echo $feerates | jq -r '.perkw.max_acceptable')"
 
