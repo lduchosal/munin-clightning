@@ -217,7 +217,7 @@ listpeers=$(cat <<__EOF__
 __EOF__
 )
 
-read -r -d '' listpeers2 <<__EOF__
+listpeers2=$(cat <<__EOF__
 {
    "peers": []
 }

@@ -255,17 +255,59 @@ listpeers=$($BINARY --lightning-dir=$DATA_DIR listpeers)
 #    ]
 # }
 
+jsont=$(cat <<__EOF__
+{
+   "total_peers": .peers | length,
+
+   "peers": [ 
+      .peers[] | {
+         "id": .id,
+         "label": .netaddr[0],
+         "value":[ 
+            [ 
+               "0", 
+               .channels[].total_msat  
+                  | sub("msat";"")  
+                  | tonumber 
+            ] 
+            | add 
+            / 1000 
+         ][0]
+      }],
+
+}
+__EOF__
+)
+result=$(echo $listpeers | jq "$(echo $jsont)")
+if [ "$1" = "debug" ]; then
+    echo $listpeers | jq
+    echo $result | jq
+fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title c-lightning chain info'
-    echo 'graph_vlabel blocks'
+
+    echo 'graph_title c-lightning peers info'
+    echo 'graph_vlabel peers'
     echo 'graph_category clightning'
-    echo 'graph_info This graph shows the info reported by lightningd.'
-    echo "clightning_blockheight.label clightning current blockheight ($(echo $getinfo | jq '.network'))'"
-    echo "chain_blockcount.label bitcoin blockcount ($(echo $getchaininfo | jq '.chain'))'"
+    echo 'graph_info This graph shows the peers reported by lightningd.'
+
+    echo 'total.label total'
+
+    for item in $(echo $result | jq -c '.peers[]'); do
+        id=$(echo $item | jq -r ".id")
+        label=$(echo $item | jq -r ".label")
+        value=$(echo $item | jq -r ".value * -1")
+        echo "peer_$(echo $id | sha1sum | cut -c1-8).label $label"
+    done
 
     exit 0
 fi
 
-echo "clightning_blockheight.value $(echo $getinfo | jq '.blockheight')"
-echo "chain_blockcount.value $(echo $getchaininfo | jq '.blockcount')"
+echo "total.value $(echo $result | jq -r '.total_funds')"
+
+for item in $(echo $result | jq -c '.peers[]'); do
+   id=$(echo $item | jq -r ".id")
+   label=$(echo $item | jq -r ".label")
+   value=$(echo $item | jq -r ".value")
+   echo "peer_$(echo $id | sha1sum | cut -c1-8).value $value"
+done

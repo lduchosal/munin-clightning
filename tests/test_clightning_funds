@@ -60,12 +60,13 @@ listfunds=$(cat <<__EOF__
 __EOF__
 )
 
-# read -r -d '' listfunds <<__EOF__
-# {
-#    "outputs": [ ],
-#    "channels": [ ]
-# }
-# __EOF__
+listfunds2=$(cat <<__EOF__
+{
+   "outputs": [ ],
+   "channels": [ ]
+}
+__EOF__
+)
 
 jsont=$(cat <<__EOF__
 {
