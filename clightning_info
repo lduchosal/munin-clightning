@@ -87,6 +87,11 @@ getchaininfo=$($BINARY --lightning-dir=$DATA_DIR getchaininfo)
 # }
 
 
+if [ "$2" = "debug" ]; then
+    echo $getinfo | jq
+    echo $getchaininfo | jq
+fi
+
 if [ "$1" = "config" ]; then
     echo 'graph_title c-lightning chain info'
     echo 'graph_vlabel blocks'

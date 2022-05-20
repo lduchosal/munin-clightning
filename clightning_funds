@@ -188,7 +188,10 @@ result=$(echo $listfunds | jq "$(echo $jsont)")
 #     }
 #   ]
 # }
-
+if [ "$2" = "debug" ]; then
+    echo $listfunds | jq
+    echo $result | jq
+fi
 
 if [ "$1" = "config" ]; then
     echo 'graph_title Channel and funds'
@@ -204,14 +207,14 @@ if [ "$1" = "config" ]; then
         id=$(echo $item | jq -r ".id")
         label=$(echo $item | jq -r ".label")
         value=$(echo $item | jq -r ".value * -1")
-        echo "output_$(echo $id | sha1sum | cut -c1-8).label out ${label}"
+        echo "output_$(echo $id | sha1sum | cut -c1-8).label ${label}"
     done
 
     for item in $(echo $result | jq -c '.channels[]'); do
         id=$(echo $item | jq -r ".id")
         label=$(echo $item | jq -r ".label")
         value=$(echo $item | jq -r ".value")
-        echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label chan ${label}"
+        echo "chan_$(echo $id | sha1sum | cut -c1-8).label ${label}"
     done
 
     exit 0
@@ -232,5 +235,5 @@ for item in $(echo $result | jq -c '.channels[]'); do
    id=$(echo $item | jq -r ".id")
    label=$(echo $item | jq -r ".label")
    value=$(echo $item | jq -r ".value")
-   echo "peer_$(echo $id | sha1sum | cut -c1-8).value $value"
+   echo "chan_$(echo $id | sha1sum | cut -c1-8).value $value"
 done

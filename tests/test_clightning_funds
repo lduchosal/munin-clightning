@@ -144,14 +144,14 @@ echo $result | jq
       id=$(echo $item | jq -r ".id")
       label=$(echo $item | jq -r ".label")
       value=$(echo $item | jq -r ".value * -1")
-      echo "output_$(echo $id | sha1sum | cut -c1-8).label out ${label}"
+      echo "output_$(echo $id | sha1sum | cut -c1-8).label ${label}"
    done
 
    for item in $(echo $result | jq -c '.channels[]'); do
       id=$(echo $item | jq -r ".id")
       label=$(echo $item | jq -r ".label")
       value=$(echo $item | jq -r ".value")
-      echo "peer_$(echo $peerid | sha1sum | cut -c1-8).label chan ${label}"
+      echo "chan_$(echo $id | sha1sum | cut -c1-8).label ${label}"
    done
 
 echo "total.value $(echo $result | jq -r '.total_funds')"
@@ -169,7 +169,7 @@ for item in $(echo $result | jq -c '.channels[]'); do
    id=$(echo $item | jq -r ".id")
    label=$(echo $item | jq -r ".label")
    value=$(echo $item | jq -r ".value")
-   echo "peer_$(echo $id | sha1sum | cut -c1-8).value $value"
+   echo "chan_$(echo $id | sha1sum | cut -c1-8).value $value"
 done
 
 i=0

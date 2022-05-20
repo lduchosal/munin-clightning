@@ -65,6 +65,10 @@ listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 # }
 
 
+if [ "$2" = "debug" ]; then
+    echo $listfunds | jq
+fi
+
 if [ "$1" = "config" ]; then
     echo 'graph_title Channel count'
     echo 'graph_vlabel number of channels'
@@ -72,18 +76,14 @@ if [ "$1" = "config" ]; then
     echo 'graph_info This graph shows the number of open channels.'
     echo 'total.label total'
     
-    i=0
     for short_channel_id in $(echo $listfunds | jq -r '.channels[].short_channel_id'); do
-        ((i=$i+1))
-        echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).label chan$i ${short_channel_id}"
+        echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).label ${short_channel_id}"
     done
 
     exit 0
 fi
 
 echo "total.value $(echo $listfunds | jq '.channels | length')"
-i=0
-for short_channel_id in $(echo $listfunds | jq '.channels[].short_channel_id'); do
-    ((i=$i+1))
-    echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).value 1.$i"
+for short_channel_id in $(echo $listfunds | jq -r '.channels[].short_channel_id'); do
+    echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).value 1"
 done
