@@ -138,7 +138,7 @@ if [ "$2" = "debug" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Invoices'
+    echo 'graph_title Invoices amount'
     echo 'graph_vlabel sats'
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the total invoices on your clightning node.'
