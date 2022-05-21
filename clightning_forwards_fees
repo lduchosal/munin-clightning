@@ -153,8 +153,8 @@ if [ "$2" = "debug" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Forwards'
-    echo 'graph_vlabel forwards'
+    echo 'graph_title Forwards fees'
+    echo 'graph_vlabel sats'
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the forwards fees on your clightning node.'
     

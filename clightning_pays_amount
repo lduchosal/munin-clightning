@@ -168,8 +168,8 @@ fi
 
 if [ "$1" = "config" ]; then
 
-    echo 'graph_title Pays'
-    echo 'graph_vlabel pays'
+    echo 'graph_title Pays amount'
+    echo 'graph_vlabel sats'
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the pays on your clightning node.'
     
