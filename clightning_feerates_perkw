@@ -33,6 +33,21 @@ AGPLv3+
 BINARY=${binary:-"/usr/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
+if [[ "$1" == test* ]]; then
+    echo 
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo 
+fi
+
+
+if [ ! -f "$BINARY" ]; then
+    echo $0 $BINARY not found
+    BINARY=/bin/echo
+fi
+
+
 if [ "$1" = "autoconf" ]; then
     autoconf="yes"
 
@@ -44,7 +59,7 @@ fi
 
 feerates=$($BINARY --lightning-dir=$DATA_DIR feerates perkw)
 
-if [ "$1" = "test2" ]; then
+if [[ "$1" == test* ]]; then
 
    feerates=$(cat <<__EOF__
 {

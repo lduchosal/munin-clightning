@@ -33,6 +33,21 @@ AGPLv3+
 BINARY=${binary:-"/usr/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
+if [[ "$1" == test* ]]; then
+    echo 
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo 
+fi
+
+
+if [ ! -f "$BINARY" ]; then
+    echo $0 $BINARY not found
+    BINARY=/bin/echo
+fi
+
+
 if [ "$1" = "autoconf" ]; then
     autoconf="yes"
 
@@ -109,27 +124,28 @@ fi
 jsont=$(cat <<__EOF__
 {
    
-   "in": [
-      [ 
-         .forwards[] 
-            | .in_msatoshi 
-            / 1000
-      ], [0]
-   ] 
-   | add 
-   | add,
+   "in": 
+      [
+         [ 
+            .forwards[] 
+               | .in_msatoshi 
+               / 1000
+         ], [0]
+      ] 
+      | add 
+      | add,
 
    
-   "out": [[
-      [ 
-         .forwards[] 
-            | .out_msatoshi 
-            / 1000
-      ], [0]
-   ] 
-   | add 
-   | add
-   * -1 ] [0]
+   "out":
+      [
+         [ 
+            .forwards[] 
+               | .out_msatoshi 
+               / 1000
+         ], [0]
+      ] 
+      | add 
+      | add
 
    
 }
@@ -156,4 +172,4 @@ if [ "$1" = "config" ]; then
 fi
 
 echo "in.value $(echo $result | jq -r '.in')"
-echo "out.value $(echo $result | jq -r '.out')"
+echo "out.value -$(echo $result | jq -r '.out')"

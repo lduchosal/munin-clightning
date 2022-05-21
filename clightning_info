@@ -33,6 +33,20 @@ AGPLv3+
 BINARY=${binary:-"/usr/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
+if [[ "$1" == test* ]]; then
+    echo 
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo 
+fi
+
+
+if [ ! -f "$BINARY" ]; then
+    echo $0 $BINARY not found
+    BINARY=/bin/echo
+fi
+
 if [ "$1" = "autoconf" ]; then
     autoconf="yes"
 
@@ -46,12 +60,12 @@ getinfo=$($BINARY --lightning-dir=$DATA_DIR getinfo)
 getchaininfo=$($BINARY --lightning-dir=$DATA_DIR getchaininfo)
 
 
-if [ "$1" = "test2" ]; then
+if [ "$1" = "test" ]; then
 
    getinfo=$(cat <<__EOF__
 {
    "id": "***id***",
-   "alias": ""***alias***",
+   "alias": "***alias***",
    "color": "cc0000",
    "num_peers": 0,
    "num_pending_channels": 0,
@@ -105,8 +119,8 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel blocks'
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the info reported by lightningd.'
-    echo "clightning_blockheight.label clightning current blockheight ($(echo $getinfo | jq '.network'))'"
-    echo "chain_blockcount.label bitcoin blockcount ($(echo $getchaininfo | jq '.chain'))'"
+    echo "clightning_blockheight.label clightning blockheight ($(echo $getinfo | jq -r '.network'))'"
+    echo "chain_blockcount.label bitcoin blockheight ($(echo $getchaininfo | jq -r '.chain'))'"
 
     exit 0
 fi
