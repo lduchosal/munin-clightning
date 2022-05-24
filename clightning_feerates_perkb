@@ -92,7 +92,7 @@ fi
 
 
 if [ "$2" = "debug" ]; then
-    echo $getlog | jq
+    echo $feerates | jq
 fi
 
 if [ "$1" = "config" ]; then
@@ -112,7 +112,7 @@ perkb_htlc_resolution.label htlc_resolution
 perkb_penalty.label penalty
 
 multigraph feerates_perkb_acceptable
-graph_title c-lightning acceptable feerates perkb
+graph_title c-lightning feerates perkb acceptable
 graph_vlabel sats
 graph_category clightning
 graph_info This graph shows the acceptable feerates perkb reported by lightningd.
@@ -122,7 +122,7 @@ perkb_min_acceptable.label min_acceptable
 perkb_max_acceptable.label max_acceptable
 
 multigraph feerates_perkb_onchain
-graph_title c-lightning onchain feerates perkb
+graph_title c-lightning feerates perkb onchain
 graph_vlabel sats
 graph_category clightning
 graph_info This graph shows the onchain feerates perkb reported by lightningd.
