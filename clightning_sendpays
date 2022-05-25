@@ -1,0 +1,287 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+clightning_sendpays - Plugin to monitor your sendpays on the lightning network
+
+=head1 CONFIGURATION
+
+ [clightning_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Dvchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ "$1" == "test" ] \
+   || [ "$1" == "test2" ]; then
+    echo 
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo 
+fi
+
+if [ ! -f "$BINARY" ]; then
+    echo $0 $BINARY not found
+    BINARY=/bin/echo
+fi
+
+if [ "$1" = "autoconf" ]; then
+    autoconf="yes"
+
+    command -v $BINARY >/dev/null || autoconf="no"
+
+    echo $autoconf
+    exit 0
+fi
+
+listsendpays=$($BINARY --lightning-dir=$DATA_DIR listsendpays)
+
+if [ "$1" = "test" ]; then
+
+   listsendpays=$(cat <<__EOF__
+{
+   "payments": [
+      {
+         "id": 1,
+         "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+         "destination": "000000000000000000000000000000000000000000000000000000000000000000",
+         "msatoshi": 1000000,
+         "amount_msat": "1000000msat",
+         "msatoshi_sent": 1000000,
+         "amount_sent_msat": "1000000msat",
+         "created_at": 1628762052,
+         "status": "complete",
+         "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
+         "bolt11": "lnbc1p000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+         "id": 2,
+         "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+         "destination": "000000000000000000000000000000000000000000000000000000000000000000",
+         "msatoshi": 149000000,
+         "amount_msat": "149000000msat",
+         "msatoshi_sent": 149000000,
+         "amount_sent_msat": "149000000msat",
+         "created_at": 1628762196,
+         "status": "complete",
+         "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
+         "bolt11": "lnbc1p000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+         "id": 3,
+         "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+         "destination": "000000000000000000000000000000000000000000000000000000000000000000",
+         "msatoshi": 100000,
+         "amount_msat": "100000msat",
+         "msatoshi_sent": 101252,
+         "amount_sent_msat": "101252msat",
+         "created_at": 1629273157,
+         "status": "complete",
+         "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
+         "bolt11": "lnbc1p000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+         "id": 4,
+         "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+         "destination": "000000000000000000000000000000000000000000000000000000000000000000",
+         "msatoshi": 1000,
+         "amount_msat": "1000msat",
+         "msatoshi_sent": 1001,
+         "amount_sent_msat": "1001msat",
+         "created_at": 1631312732,
+         "status": "complete",
+         "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
+         "label": "Hello from here !"
+      },
+      {
+         "id": 5,
+         "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+         "destination": "000000000000000000000000000000000000000000000000000000000000000000",
+         "msatoshi": 100000,
+         "amount_msat": "100000msat",
+         "msatoshi_sent": 100000,
+         "amount_sent_msat": "100000msat",
+         "created_at": 1631467334,
+         "status": "complete",
+         "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
+         "bolt11": "lnbc1p000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      }
+   ]
+}
+
+__EOF__
+)
+
+fi
+
+if [ "$1" = "test2" ]; then
+
+   listsendpays=$(cat <<__EOF__
+{
+   "payments": []
+}
+__EOF__
+)
+
+fi
+
+jsont=$(cat <<__EOF__
+{
+   "num": {
+
+      "total": [ 
+         .payments[] 
+         ] 
+         | length,
+
+      "complete": [ 
+         .payments[] 
+         | select(.status == "complete") 
+         ] 
+         | length,
+
+      "failed": [ 
+         .payments[] 
+         | select(.status == "failed") 
+         ] 
+         | length,
+
+      "pending": [ 
+         .payments[] 
+         | select(.status == "pending") 
+         ] 
+         | length
+   },
+
+   "amount": {
+         
+      "total": [
+         [ 
+            .payments[] 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+         | add 
+         | add,
+      
+      "complete": [
+         [ 
+            .payments[] 
+               | select(.status == "complete") 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+         | add 
+         | add,
+         
+      "failed": [
+         [ 
+            .payments[] 
+               | select(.status == "failed") 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+         | add 
+         | add,
+         
+      "pending": [
+         [ 
+            .payments[] 
+               | select(.status == "pending") 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+         | add 
+         | add,
+   }
+}
+__EOF__
+)
+
+result=$(echo $listsendpays | jq "$(echo $jsont)")
+
+if [ "$2" = "debug" ]; then
+    echo $listsendpays | jq
+    echo $result | jq
+fi
+
+if [ "$1" = "config" ]; then
+
+cat <<__EOF__
+
+multigraph sendpays
+graph_title Pays
+graph_vlabel pays
+graph_category clightning
+graph_info This graph shows the pays on your clightning node.
+
+total.label total
+complete.label complete
+failed.label failed
+pending.label pending
+
+multigraph sendpays_amount
+graph_title Pays
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the pays amount on your clightning node.
+
+total.label total
+complete.label complete
+failed.label failed
+pending.label pending
+
+__EOF__
+
+    exit 0
+fi
+
+cat <<__EOF__
+
+multigraph sendpays
+total.value $(echo $result | jq -r '.num.total')
+complete.value $(echo $result | jq -r '.num.complete')
+failed.value $(echo $result | jq -r '.num.failed')
+pending.value $(echo $result | jq -r '.num.pending')
+
+multigraph sendpays_amount
+total.value $(echo $result | jq -r '.amount.total')
+complete.value $(echo $result | jq -r '.amount.complete')
+failed.value $(echo $result | jq -r '.amount.failed')
+pending.value $(echo $result | jq -r '.amount.pending')
+
+__EOF__
