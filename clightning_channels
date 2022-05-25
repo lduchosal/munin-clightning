@@ -63,7 +63,6 @@ fi
 
 listfunds=$($BINARY --lightning-dir=$DATA_DIR listfunds)
 
-
 if [ "$1" = "test" ]; then
 
    listfunds=$(cat <<__EOF__
@@ -136,25 +135,91 @@ __EOF__
 
 fi
 
+jsont=$(cat <<__EOF__
+{
+   "channels" : {
+      "total": .channels | length,
+      "short_channel_id": .channels[].short_channel_id
+   },
+
+   "balance" : [
+      .channels[] |
+      {
+         "short_channel_id" : .short_channel_id,
+         "our" : .channel_sat,
+         "their" : .channel_total_sat - .channel_sat
+      }
+   ]
+}
+__EOF__
+)
+
+result=$(echo $listfunds | jq "$(echo $jsont)")
+
 if [ "$2" = "debug" ]; then
     echo $listfunds | jq
+    echo $result | jq
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Channel count'
-    echo 'graph_vlabel number of channels'
-    echo 'graph_category clightning'
-    echo 'graph_info This graph shows the number of open channels.'
-    echo 'total.label total'
-    
-    for short_channel_id in $(echo $listfunds | jq -r '.channels[].short_channel_id'); do
-        echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).label ${short_channel_id}"
-    done
+   cat <<__EOF__
+multigraph channels
 
-    exit 0
+graph_title Channel count
+graph_vlabel number of channels
+graph_category clightning
+graph_info This graph shows the number of open channels.
+total.label total
+
+__EOF__
+
+   for short_channel_id in $(echo $result | jq -r '.channels.short_channel_id'); do
+      echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).label $short_channel_id"
+   done
+
+
+   for channel in $(echo $result | jq -r '.balance'); do
+      short_channel_id=$(echo $channel | jq -r '.short_channel_id')
+      label=$(echo $short_channel_id | sha1sum | cut -c1-8)
+
+      cat <<__EOF__
+multigraph channels_balance_$label
+
+graph_title Channel balance
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the balance of an open channel.
+
+our.label our
+their.label their
+__EOF__
+
+   done
+
+   exit 0
 fi
+   cat <<__EOF__
+multigraph channels
 
-echo "total.value $(echo $listfunds | jq '.channels | length')"
-for short_channel_id in $(echo $listfunds | jq -r '.channels[].short_channel_id'); do
-    echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).value 1"
+total.value $(echo $result | jq -r '.channels.total')
+__EOF__
+
+for short_channel_id in $(echo $result | jq -r '.channels.short_channel_id'); do
+   echo "channel_$(echo $short_channel_id | sha1sum | cut -c1-8).value 1"
+done
+
+
+for channel in $(echo $result | jq -r '.balance'); do
+   short_channel_id=$(echo $channel | jq -r '.short_channel_id')
+   our=$(echo $channel | jq -r '.our')
+   their=$(echo $channel | jq -r '.their')
+   label=$(echo $short_channel_id | sha1sum | cut -c1-8)
+
+   cat <<__EOF__
+multigraph channels_balance_$label
+
+our.value $our
+their.value $their
+__EOF__
+
 done
