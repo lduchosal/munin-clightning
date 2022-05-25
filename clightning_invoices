@@ -111,9 +111,59 @@ fi
 
 jsont=$(cat <<__EOF__
 {
-   "total": [ .invoices[] ] | length,
-   "expired": [ .invoices[] | select(.status == "expired") ] | length,
-   "paid": [ .invoices[] | select(.status == "paid") ] | length,
+   "invoices" : {
+      "total": [ 
+         .invoices[] 
+      ] 
+      | length,
+
+      "expired": [ 
+         .invoices[] 
+            | select(.status == "expired") 
+      ] 
+      | length,
+
+      "paid": [ 
+         .invoices[] 
+            | select(.status == "paid") 
+      ] 
+      | length
+   },
+
+   "amount" : {
+      "total": [
+         [ 
+            .invoices[] 
+               | .msatoshi 
+         ], 
+         [0]
+      ] 
+      | add 
+      | add,
+
+      "expired": [
+         [ 
+            .invoices[] 
+               | select(.status == "expired") 
+               | .msatoshi 
+         ], 
+         [0]
+      ] 
+      | add 
+      | add,
+
+      "paid": [
+         [ 
+            .invoices[] 
+               | select(.status == "paid") 
+               | .msatoshi 
+         ], 
+         [0]
+      ] 
+      | add 
+      | add,
+
+   }
 }
 __EOF__
 )
@@ -126,18 +176,44 @@ if [ "$2" = "debug" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Invoices'
-    echo 'graph_vlabel invoices'
-    echo 'graph_category clightning'
-    echo 'graph_info This graph shows the invoices on your clightning node.'
-    
-    echo 'total.label total'
-    echo 'expired.label expired'
-    echo 'paid.label paid'
+cat <<__EOF__
+multigraph invoices
+
+graph_title Invoices
+graph_vlabel invoices
+graph_category clightning
+graph_info This graph shows the invoices on your clightning node.
+
+total.label total
+expired.label expired
+paid.label paid
+
+multigraph invoices_amount
+
+graph_title Invoices amount
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the total invoices on your clightning node.
+
+total.label total
+expired.label expired
+paid.label paid
+
+__EOF__
 
     exit 0
 fi
+cat <<__EOF__
+multigraph invoices
 
-echo "total.value $(echo $result | jq -r '.total')"
-echo "expired.value $(echo $result | jq -r '.expired')"
-echo "paid.value $(echo $result | jq -r '.paid')"
+total.value $(echo $result | jq -r '.invoices.total')
+expired.value $(echo $result | jq -r '.invoices.expired')
+paid.value $(echo $result | jq -r '.invoices.paid')
+
+multigraph invoices_amount
+
+total.value $(echo $result | jq -r '.amount.total')
+expired.value $(echo $result | jq -r '.amount.expired')
+paid.value $(echo $result | jq -r '.amount.paid')
+
+__EOF__

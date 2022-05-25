@@ -43,7 +43,6 @@ if [ "$1" == "test" ] \
 fi
 
 
-
 if [ ! -f "$BINARY" ]; then
     echo $0 $BINARY not found
     BINARY=/bin/echo
@@ -116,10 +115,90 @@ fi
 
 jsont=$(cat <<__EOF__
 {
-   "total": [ .pays[] ] | length,
-   "complete": [ .pays[] | select(.status == "complete") ] | length,
-   "failed": [ .pays[] | select(.status == "failed") ] | length,
-   "pending": [ .pays[] | select(.status == "pending") ] | length
+   "pays" : {
+
+      "total": [ 
+         .pays[] 
+      ] | length,
+
+      "complete": [ 
+         .pays[] 
+         | select(.status == "complete") 
+      ] 
+      | length,
+
+      "failed": [ 
+         .pays[] 
+         | select(.status == "failed") 
+      ] 
+      | length,
+
+      "pending": [ 
+         .pays[] 
+         | select(.status == "pending") 
+      ] 
+      | length
+
+   },
+
+   "amount" : {
+
+      "total": [
+         [ 
+            .pays[] 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+      | add 
+      | add,
+
+      
+      "complete": [
+         [ 
+            .pays[] 
+               | select(.status == "complete") 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+      | add 
+      | add,
+
+         
+      "failed": [
+         [ 
+            .pays[] 
+               | select(.status == "failed") 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+      | add 
+      | add,
+
+
+         
+      "pending": [
+         [ 
+            .pays[] 
+               | select(.status == "pending") 
+               | .amount_msat 
+               | sub("msat";"") 
+               | tonumber 
+               / 1000
+         ], [0]
+      ] 
+      | add 
+      | add,
+
+   }
 }
 __EOF__
 )
@@ -132,20 +211,49 @@ if [ "$2" = "debug" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Pays'
-    echo 'graph_vlabel pays'
-    echo 'graph_category clightning'
-    echo 'graph_info This graph shows the pays on your clightning node.'
-    
-    echo 'total.label total'
-    echo 'complete.label complete'
-    echo 'failed.label failed'
-    echo 'pending.label pending'
+
+   cat <<__EOF__
+multigraph pays
+
+graph_title Pays
+graph_vlabel pays
+graph_category clightning
+graph_info This graph shows the pays on your clightning node.
+
+total.label total
+complete.label complete
+failed.label failed
+pending.label pending
+
+multigraph pays_amount
+
+graph_title Pays amount
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the pays on your clightning node.
+
+total.label total
+complete.label complete
+failed.label failed
+pending.label pending
+__EOF__
 
     exit 0
 fi
 
-echo "total.value $(echo $result | jq -r '.total')"
-echo "complete.value $(echo $result | jq -r '.complete')"
-echo "failed.value $(echo $result | jq -r '.failed')"
-echo "pending.value $(echo $result | jq -r '.pending')"
+cat <<__EOF__
+multigraph pays
+
+total.value $(echo $result | jq -r '.pays.total')
+complete.value $(echo $result | jq -r '.pays.complete')
+failed.value $(echo $result | jq -r '.pays.failed')
+pending.value $(echo $result | jq -r '.pays.pending')
+
+multigraph pays_amount
+
+total.value $(echo $result | jq -r '.amount.total')
+complete.value $(echo $result | jq -r '.amount.complete')
+failed.value $(echo $result | jq -r '.amount.failed')
+pending.value $(echo $result | jq -r '.amount.pending')
+
+__EOF__

@@ -37,7 +37,7 @@ if [ "$1" == "test" ] \
    || [ "$1" == "test2" ]; then
     echo 
     echo "# "
-    echo "# $0 $1"
+    echo "# $0 $1 $2"
     echo "# "
     echo 
 fi
