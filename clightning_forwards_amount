@@ -69,10 +69,10 @@ if [ "$1" = "test" ]; then
       {
          "in_channel": "694360x1604x1",
          "out_channel": "694393x176x1",
-         "in_msatoshi": 500006000,
-         "in_msat": "500006000msat",
-         "out_msatoshi": 500000000,
-         "out_msat": "500000000msat",
+         "in_msatoshi": 1000,
+         "in_msat": "1000msat",
+         "out_msatoshi": 1000,
+         "out_msat": "1000msat",
          "fee": 6000,
          "fee_msat": "6000msat",
          "status": "settled",
@@ -104,6 +104,26 @@ if [ "$1" = "test" ]; then
          "status": "local_failed",
          "received_time": 1628388383.738,
          "resolved_time": 1628388386.077
+      },
+      {
+         "in_channel": "694360x1604x1",
+         "in_msatoshi": 500006000,
+         "in_msat": "500006000msat",
+         "fee": 6000,
+         "fee_msat": "6000msat",
+         "status": "local_failed",
+         "received_time": 1628388383.738,
+         "resolved_time": 1628388386.077
+      },
+      {
+         "out_channel": "694393x176x1",
+         "out_msatoshi": 500000000,
+         "out_msat": "500000000msat",
+         "fee": 6000,
+         "fee_msat": "6000msat",
+         "status": "local_failed",
+         "received_time": 1628388383.738,
+         "resolved_time": 1628388386.077
       }
    ]
 }
@@ -125,31 +145,27 @@ fi
 
 jsont=$(cat <<__EOF__
 {
-   
-   "in": 
-      [
-         [ 
-            .forwards[] 
-               | .in_msatoshi 
-               / 1000
-         ], [0]
-      ] 
-      | add 
-      | add,
 
-   
-   "out":
+   "in": [
       [
-         [ 
-            .forwards[] 
-               | .out_msatoshi 
-               / 1000
-         ], [0]
-      ] 
-      | add 
+         [ .forwards[] | .in_msatoshi ], 
+         [0]
+      ]
       | add
+      | add
+      / 1000 
+   ] [0],
 
-   
+   "out": [
+      [
+         [ .forwards[] | .out_msatoshi ], 
+         [0]
+      ]
+      | add
+      | add
+      / 1000 
+   ] [0]
+
 }
 __EOF__
 )
