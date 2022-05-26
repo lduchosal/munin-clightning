@@ -292,9 +292,9 @@ cat <<__EOF__
 
 multigraph funds
 
-total.value $(echo $result | jq -r '.total_funds')"
-outputs.value $(echo $result | jq -r '.total_outpouts')"
-channels.value $(echo $result | jq -r '.total_channels')"
+total.value $(echo $result | jq -r '.total_funds')
+outputs.value $(echo $result | jq -r '.total_outpouts')
+channels.value $(echo $result | jq -r '.total_channels')
 
 __EOF__
 
