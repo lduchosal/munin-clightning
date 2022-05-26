@@ -203,6 +203,7 @@ __EOF__
    for short_channel_id in $(echo $result | jq -r '.channels.short_channel_id[]'); do
       sid=$(echo $short_channel_id | sha1sum | cut -c1-8)
       echo "channel_$sid.label $short_channel_id"
+      echo "channel_$sid.draw STACK"
    done
 
    for channel in $(echo $result | jq -c -r '.balance[]'); do
