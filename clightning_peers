@@ -350,7 +350,7 @@ if [ "$1" = "config" ]; then
         value=$(echo $item | jq -r ".value * -1")
         sid=$(echo $id | sha1sum | cut -c1-8)
         echo "peer_$sid.label $label"
-        echo "peer_$sid.draw STACK"
+        echo "peer_$sid.draw AREASTACK"
     done
 
     exit 0

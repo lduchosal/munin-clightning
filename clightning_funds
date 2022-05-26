@@ -235,9 +235,9 @@ graph_info This graph shows the sats available on open channels and remaining fu
 
 total.label total
 outputs.label outputs
-outputs.draw STACK
+outputs.draw AREASTACK
 channels.label channels
-channels.draw STACK
+channels.draw AREASTACK
 __EOF__
 
 
@@ -260,7 +260,7 @@ __EOF__
         sid=$(echo $id | sha1sum | cut -c1-8)
         
         echo "output_$sid.label ${label}"
-        echo "output_$sid.draw STACK"
+        echo "output_$sid.draw AREASTACK"
     done
 
 
@@ -282,7 +282,7 @@ __EOF__
         sid=$(echo $id | sha1sum | cut -c1-8)
 
         echo "chan_$sid.label ${label}"
-        echo "chan_$sid.draw STACK"
+        echo "chan_$sid.draw AREASTACK"
     done
 
     exit 0

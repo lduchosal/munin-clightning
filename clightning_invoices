@@ -199,7 +199,7 @@ total.draw LINE3
 expired.label expired
 expired.draw AREA
 paid.label paid
-paid.draw STACK
+paid.draw AREASTACK
 
 multigraph invoices_amount
 
@@ -213,7 +213,7 @@ total.draw LINE3
 expired.label expired
 expired.draw AREA
 paid.label paid
-paid.draw STACK
+paid.draw AREASTACK
 
 __EOF__
 

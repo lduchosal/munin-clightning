@@ -232,11 +232,11 @@ graph_info This graph shows the pays on your clightning node.
 
 total.label total
 complete.label complete
-complete.draw STACK
+complete.draw AREASTACK
 failed.label failed
-failed.draw STACK
+failed.draw AREASTACK
 pending.label pending
-pending.draw STACK
+pending.draw AREASTACK
 
 multigraph pays_amount
 
@@ -247,11 +247,11 @@ graph_info This graph shows the pays on your clightning node.
 
 total.label total
 complete.label complete
-complete.draw STACK
+complete.draw AREASTACK
 failed.label failed
-failed.draw STACK
+failed.draw AREASTACK
 pending.label pending
-pending.draw STACK
+pending.draw AREASTACK
 __EOF__
 
     exit 0
