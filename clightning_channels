@@ -197,6 +197,8 @@ graph_vlabel number of channels
 graph_category clightning
 graph_info This graph shows the number of open channels.
 total.label total
+total.draw LINE3
+graph.draw AREA
 
 __EOF__
 
