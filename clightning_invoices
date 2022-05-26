@@ -196,7 +196,9 @@ graph_info This graph shows the invoices on your clightning node.
 
 total.label total
 expired.label expired
+expired.draw STACK
 paid.label paid
+paid.draw STACK
 
 multigraph invoices_amount
 
@@ -207,7 +209,9 @@ graph_info This graph shows the total invoices on your clightning node.
 
 total.label total
 expired.label expired
+expired.draw STACK
 paid.label paid
+paid.draw STACK
 
 __EOF__
 
