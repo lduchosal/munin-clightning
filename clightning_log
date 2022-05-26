@@ -83,6 +83,11 @@ if [ "$2" = "debug" ]; then
     echo $getlog | jq
 fi
 
+
+#
+# config
+#
+
 if [ "$1" = "config" ]; then
     echo 'graph_title c-lightning log'
     echo 'graph_vlabel bytes'

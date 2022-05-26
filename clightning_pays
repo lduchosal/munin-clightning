@@ -113,6 +113,11 @@ __EOF__
 
 fi
 
+
+#
+# transform
+#
+
 jsont=$(cat <<__EOF__
 {
    "pays" : {
@@ -209,6 +214,11 @@ if [ "$2" = "debug" ]; then
     echo $listpays | jq
     echo $result | jq
 fi
+
+
+#
+# config
+#
 
 if [ "$1" = "config" ]; then
 

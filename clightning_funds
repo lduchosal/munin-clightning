@@ -134,6 +134,11 @@ __EOF__
 fi
 
 
+
+#
+# transform
+#
+
 jsont=$(cat <<__EOF__
 {
    "txids": [
@@ -213,6 +218,11 @@ if [ "$2" = "debug" ]; then
     echo $listfunds | jq
     echo $result | jq
 fi
+
+
+#
+# config
+#
 
 if [ "$1" = "config" ]; then
     echo 'graph_title Channel and funds'

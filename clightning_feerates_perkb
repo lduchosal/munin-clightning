@@ -95,6 +95,11 @@ if [ "$2" = "debug" ]; then
     echo $feerates | jq
 fi
 
+
+#
+# config
+#
+
 if [ "$1" = "config" ]; then
 
 cat <<__EOF__

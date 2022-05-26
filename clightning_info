@@ -116,6 +116,11 @@ if [ "$2" = "debug" ]; then
     echo $getchaininfo | jq
 fi
 
+
+#
+# config
+#
+
 if [ "$1" = "config" ]; then
     echo 'graph_title c-lightning chain info'
     echo 'graph_vlabel blocks'

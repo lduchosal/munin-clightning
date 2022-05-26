@@ -109,6 +109,11 @@ __EOF__
 
 fi
 
+
+#
+# transform
+#
+
 jsont=$(cat <<__EOF__
 {
    "invoices" : {
@@ -174,6 +179,11 @@ if [ "$2" = "debug" ]; then
     echo $listinvoices | jq
     echo $result | jq
 fi
+
+
+#
+# config
+#
 
 if [ "$1" = "config" ]; then
 cat <<__EOF__

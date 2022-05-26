@@ -289,6 +289,11 @@ __EOF__
 
 fi
 
+
+#
+# transform
+#
+
 jsont=$(cat <<__EOF__
 {
    "total": [
@@ -324,6 +329,11 @@ if [ "$1" = "debug" ]; then
     echo $listpeers | jq
     echo $result | jq
 fi
+
+
+#
+# config
+#
 
 if [ "$1" = "config" ]; then
 
