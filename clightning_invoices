@@ -195,8 +195,9 @@ graph_category clightning
 graph_info This graph shows the invoices on your clightning node.
 
 total.label total
+total.draw LINE3
 expired.label expired
-expired.draw STACK
+expired.draw AREA
 paid.label paid
 paid.draw STACK
 
@@ -208,8 +209,9 @@ graph_category clightning
 graph_info This graph shows the total invoices on your clightning node.
 
 total.label total
+total.draw LINE3
 expired.label expired
-expired.draw STACK
+expired.draw AREA
 paid.label paid
 paid.draw STACK
 
