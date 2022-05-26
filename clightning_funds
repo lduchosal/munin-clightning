@@ -225,46 +225,107 @@ fi
 #
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Channel and funds'
-    echo 'graph_vlabel sats'
-    echo 'graph_category clightning'
-    echo 'graph_info This graph shows the sats available on open channels and remaining funds.'
-    
-    echo 'total.label total'
-    echo 'outputs.label outputs'
-    echo 'channels.label channels'
+   cat <<__EOF__
+multigraph funds
+
+graph_title Channel and funds
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the sats available on open channels and remaining funds.
+
+total.label total
+outputs.label outputs
+outputs.draw STACK
+channels.label channels
+channels.draw STACK
+__EOF__
+
+
+   cat <<__EOF__
+
+multigraph funds_outputs
+
+graph_title Channel and funds / Outputs
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the sats available on available outputs
+
+
+__EOF__
 
     for item in $(echo $result | jq -c '.outputs[]'); do
         id=$(echo $item | jq -r ".id")
         label=$(echo $item | jq -r ".label")
         value=$(echo $item | jq -r ".value * -1")
-        echo "output_$(echo $id | sha1sum | cut -c1-8).label ${label}"
+        sid=$(echo $id | sha1sum | cut -c1-8)
+        
+        echo "output_$sid.label ${label}"
+        echo "output_$sid.draw STACK"
     done
 
+
+   cat <<__EOF__
+
+multigraph funds_channels
+
+graph_title Channel and funds / Channels
+graph_vlabel sats
+graph_category clightning
+graph_info This graph shows the sats available on open channels
+
+
+__EOF__
     for item in $(echo $result | jq -c '.channels[]'); do
         id=$(echo $item | jq -r ".id")
         label=$(echo $item | jq -r ".label")
         value=$(echo $item | jq -r ".value")
-        echo "chan_$(echo $id | sha1sum | cut -c1-8).label ${label}"
+        sid=$(echo $id | sha1sum | cut -c1-8)
+
+        echo "chan_$sid.label ${label}"
+        echo "chan_$sid.draw STACK"
     done
 
     exit 0
 fi
 
-echo "total.value $(echo $result | jq -r '.total_funds')"
-echo "outputs.value $(echo $result | jq -r '.total_outpouts')"
-echo "channels.value $(echo $result | jq -r '.total_channels')"
+cat <<__EOF__
+
+multigraph funds
+
+total.value $(echo $result | jq -r '.total_funds')"
+outputs.value $(echo $result | jq -r '.total_outpouts')"
+channels.value $(echo $result | jq -r '.total_channels')"
+
+__EOF__
+
+
+cat <<__EOF__
+
+multigraph funds_outputs
+
+__EOF__
 
 for item in $(echo $result | jq -c '.outputs[]'); do
    id=$(echo $item | jq -r ".id")
    label=$(echo $item | jq -r ".label")
    value=$(echo $item | jq -r ".value * -1")
-   echo "output_$(echo $id | sha1sum | cut -c1-8).value $value"
+   sid=$(echo $id | sha1sum | cut -c1-8)
+
+   echo "output_$sid.value $value"
 done
+
+
+cat <<__EOF__
+
+multigraph funds_channels
+
+__EOF__
 
 for item in $(echo $result | jq -c '.channels[]'); do
    id=$(echo $item | jq -r ".id")
    label=$(echo $item | jq -r ".label")
    value=$(echo $item | jq -r ".value")
-   echo "chan_$(echo $id | sha1sum | cut -c1-8).value $value"
+   sid=$(echo $id | sha1sum | cut -c1-8)
+
+   echo "chan_$sid.value $value"
 done

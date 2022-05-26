@@ -348,7 +348,9 @@ if [ "$1" = "config" ]; then
         id=$(echo $item | jq -r ".id")
         label=$(echo $item | jq -r ".label")
         value=$(echo $item | jq -r ".value * -1")
-        echo "peer_$(echo $id | sha1sum | cut -c1-8).label $label"
+        sid=$(echo $id | sha1sum | cut -c1-8)
+        echo "peer_$sid.label $label"
+        echo "peer_$sid.draw STACK"
     done
 
     exit 0
