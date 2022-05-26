@@ -213,10 +213,10 @@ __EOF__
       
 multigraph channels_balance_$label
 
-graph_title Channel balance
+graph_title channel balance $short_channel_id
 graph_vlabel sats
 graph_category clightning
-graph_info This graph shows the balance of an open channel.
+graph_info This graph shows the balance of $short_channel_id.
 
 our.label our
 their.label their
