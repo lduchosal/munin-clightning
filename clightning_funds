@@ -308,7 +308,7 @@ __EOF__
 for item in $(echo $result | jq -c '.outputs[]'); do
    id=$(echo $item | jq -r ".id")
    label=$(echo $item | jq -r ".label")
-   value=$(echo $item | jq -r ".value * -1")
+   value=$(echo $item | jq -r ".value")
    sid=$(echo $id | sha1sum | cut -c1-8)
 
    echo "output_$sid.value $value"

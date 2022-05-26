@@ -221,7 +221,7 @@ graph_info This graph shows the balance of $short_channel_id.
 our.label our
 our.draw AREA
 their.label their
-our.draw AREA
+their.draw AREA
 
 __EOF__
 
