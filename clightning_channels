@@ -147,7 +147,7 @@ jsont=$(cat <<__EOF__
       {
          "short_channel_id" : .short_channel_id,
          "our" : .our_amount_msat,
-         "their" : ( .amount_msat - .our_amount_msat )
+         "their" : ( .our_amount_msat - .amount_msat )
       }
    ]
 }
