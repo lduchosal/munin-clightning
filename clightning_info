@@ -59,7 +59,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 getinfo=$($BINARY --lightning-dir=$DATA_DIR getinfo)
-getchaininfo=$($BINARY --lightning-dir=$DATA_DIR getchaininfo)
+getchaininfo=$($BINARY --lightning-dir=$DATA_DIR getchaininfo 1)
 
 
 if [ "$1" = "test" ]; then
@@ -91,7 +91,7 @@ if [ "$1" = "test" ]; then
    "blockheight": 702140,
    "network": "bitcoin",
    "msatoshi_fees_collected": 0,
-   "fees_collected_msat": "0msat",
+   "fees_collected_msat": 0,
    "lightning-dir": "/var/db/c-lightning/bitcoin",
    "warning_lightningd_sync": "Still loading latest blocks from bitcoind."
 }

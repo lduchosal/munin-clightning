@@ -68,9 +68,9 @@ if [ "$1" = "test" ]; then
          "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
          "destination": "000000000000000000000000000000000000000000000000000000000000000000",
          "msatoshi": 1000000,
-         "amount_msat": "1000000msat",
+         "amount_msat": 1000000,
          "msatoshi_sent": 1000000,
-         "amount_sent_msat": "1000000msat",
+         "amount_sent_msat": 1000000,
          "created_at": 1628762052,
          "status": "complete",
          "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -81,9 +81,9 @@ if [ "$1" = "test" ]; then
          "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
          "destination": "000000000000000000000000000000000000000000000000000000000000000000",
          "msatoshi": 149000000,
-         "amount_msat": "149000000msat",
+         "amount_msat": 149000000,
          "msatoshi_sent": 149000000,
-         "amount_sent_msat": "149000000msat",
+         "amount_sent_msat": 149000000,
          "created_at": 1628762196,
          "status": "complete",
          "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -94,9 +94,9 @@ if [ "$1" = "test" ]; then
          "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
          "destination": "000000000000000000000000000000000000000000000000000000000000000000",
          "msatoshi": 100000,
-         "amount_msat": "100000msat",
+         "amount_msat": 100000,
          "msatoshi_sent": 101252,
-         "amount_sent_msat": "101252msat",
+         "amount_sent_msat": 101252,
          "created_at": 1629273157,
          "status": "complete",
          "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -107,9 +107,9 @@ if [ "$1" = "test" ]; then
          "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
          "destination": "000000000000000000000000000000000000000000000000000000000000000000",
          "msatoshi": 1000,
-         "amount_msat": "1000msat",
+         "amount_msat": 1000,
          "msatoshi_sent": 1001,
-         "amount_sent_msat": "1001msat",
+         "amount_sent_msat": 1001,
          "created_at": 1631312732,
          "status": "complete",
          "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -120,9 +120,9 @@ if [ "$1" = "test" ]; then
          "payment_hash": "0000000000000000000000000000000000000000000000000000000000000000",
          "destination": "000000000000000000000000000000000000000000000000000000000000000000",
          "msatoshi": 100000,
-         "amount_msat": "100000msat",
+         "amount_msat": 100000,
          "msatoshi_sent": 100000,
-         "amount_sent_msat": "100000msat",
+         "amount_sent_msat": 100000,
          "created_at": 1631467334,
          "status": "complete",
          "payment_preimage": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -186,8 +186,6 @@ jsont=$(cat <<__EOF__
          [ 
             .payments[] 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 
@@ -199,8 +197,6 @@ jsont=$(cat <<__EOF__
             .payments[] 
                | select(.status == "complete") 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 
@@ -212,8 +208,6 @@ jsont=$(cat <<__EOF__
             .payments[] 
                | select(.status == "failed") 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 
@@ -225,8 +219,6 @@ jsont=$(cat <<__EOF__
             .payments[] 
                | select(.status == "pending") 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 

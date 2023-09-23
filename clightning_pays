@@ -72,7 +72,7 @@ if [ "$1" = "test" ]; then
          "status": "complete",
          "created_at": 1628762052,
          "preimage": "preimage",
-         "amount_msat": "1000000msat",
+         "amount_msat": 1000000,
          "amount_sent_msat": "1000000msat"
       },
       {
@@ -82,7 +82,7 @@ if [ "$1" = "test" ]; then
          "status": "failed",
          "created_at": 1628762052,
          "preimage": "preimage",
-         "amount_msat": "1000000msat",
+         "amount_msat": 1000000,
          "amount_sent_msat": "1000000msat"
       },
       {
@@ -92,7 +92,7 @@ if [ "$1" = "test" ]; then
          "status": "pending",
          "created_at": 1628762052,
          "preimage": "preimage",
-         "amount_msat": "1000000msat",
+         "amount_msat": 1000000,
          "amount_sent_msat": "1000000msat"
       }
    ]
@@ -152,8 +152,6 @@ jsont=$(cat <<__EOF__
          [ 
             .pays[] 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 
@@ -166,8 +164,6 @@ jsont=$(cat <<__EOF__
             .pays[] 
                | select(.status == "complete") 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 
@@ -180,8 +176,6 @@ jsont=$(cat <<__EOF__
             .pays[] 
                | select(.status == "failed") 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 
@@ -195,8 +189,6 @@ jsont=$(cat <<__EOF__
             .pays[] 
                | select(.status == "pending") 
                | .amount_msat 
-               | sub("msat";"") 
-               | tonumber 
                / 1000
          ], [0]
       ] 

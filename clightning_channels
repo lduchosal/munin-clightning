@@ -72,7 +72,7 @@ if [ "$1" = "test" ]; then
          "txid": "***txid1***",                                                                                                     
          "output": 0,                                                                                                                                                                    
          "value": 123456,
-         "amount_msat": "123456000msat",
+         "amount_msat": 123456000,
          "scriptpubkey": "***scriptpubkey***",
          "address": "***address**",
          "status": "confirmed",
@@ -83,7 +83,7 @@ if [ "$1" = "test" ]; then
          "txid": "***txid2***",                                                                                                     
          "output": 0,                                                                                                                                                                    
          "value": 123456,
-         "amount_msat": "123456000msat",
+         "amount_msat": 123456000,
          "scriptpubkey": "***scriptpubkey***",
          "address": "***address**",
          "status": "confirmed",
@@ -97,10 +97,8 @@ if [ "$1" = "test" ]; then
          "connected": true,
          "state": "CHANNELD_NORMAL",
          "short_channel_id": "***short_channel_id1**",
-         "channel_sat": 222222,
-         "our_amount_msat": "222222000msat",
-         "channel_total_sat": 222222,
-         "amount_msat": "222222000msat",
+         "our_amount_msat": 222222000,
+         "amount_msat": 222222000,
          "funding_txid": "***funding_txid***",
          "funding_output": 1
       },
@@ -109,10 +107,8 @@ if [ "$1" = "test" ]; then
          "connected": true,
          "state": "CHANNELD_NORMAL",
          "short_channel_id": "***short_channel_id2**",
-         "channel_sat": 111111,
-         "our_amount_msat": "1111111000msat",
-         "channel_total_sat": 1111111,
-         "amount_msat": "111111000msat",
+         "our_amount_msat": 1111111000,
+         "amount_msat": 111111000,
          "funding_txid": "***funding_txid***",
          "funding_output": 1
       }
@@ -150,8 +146,8 @@ jsont=$(cat <<__EOF__
       .channels[] |
       {
          "short_channel_id" : .short_channel_id,
-         "our" : .channel_sat,
-         "their" : ( .channel_sat - .channel_total_sat )
+         "our" : .our_amount_msat,
+         "their" : ( .amount_msat - .our_amount_msat )
       }
    ]
 }

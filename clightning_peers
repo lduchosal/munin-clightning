@@ -77,8 +77,7 @@ if [ "$1" = "test" ]; then
             {
                "state": "CHANNELD_NORMAL",
                "scratch_txid": "scratch_txid1_00000000000000000000000000000000000000000000000000",
-               "last_tx_fee": "1820000msat",
-               "last_tx_fee_msat": "1820000msat",
+               "last_tx_fee_msat": 1820000,
                "feerate": {
                   "perkw": 2514,
                   "perkb": 10056
@@ -101,37 +100,29 @@ if [ "$1" = "test" ]; then
                   "amount100000000000000000000000000000000000000000000000000000000000": 242557000
                },
                "funding_msat": {
-                  "peerid100000000000000000000000000000000000000000000000000000000000": "0msat",
-                  "amount100000000000000000000000000000000000000000000000000000000000": "242557000msat"
+                  "peerid100000000000000000000000000000000000000000000000000000000000": 0,
+                  "amount100000000000000000000000000000000000000000000000000000000000": 242557000
                },
                "funding": {
-                  "local_msat": "242557000msat",
-                  "remote_msat": "0msat"
+                  "local_msat": 242557000,
+                  "remote_msat": 0
                },
                "msatoshi_to_us": 242557000,
-               "to_us_msat": "242557000msat",
-               "msatoshi_to_us_min": 242557000,
-               "min_to_us_msat": "242557000msat",
-               "msatoshi_to_us_max": 242557000,
-               "max_to_us_msat": "242557000msat",
-               "msatoshi_total": 242557000,
-               "total_msat": "242557000msat",
-               "fee_base_msat": "1000msat",
+               "to_us_msat": 242557000,
+               "min_to_us_msat": 242557000,
+               "max_to_us_msat": 242557000,
+               "total_msat": 242557000,
+               "fee_base_msat": 1000,
                "fee_proportional_millionths": 10,
-               "dust_limit_satoshis": 546,
-               "dust_limit_msat": "546000msat",
+               "dust_limit_msat": 546000,
                "max_htlc_value_in_flight_msat": 18446744073709551615,
-               "max_total_htlc_in_msat": "18446744073709551615msat",
-               "their_channel_reserve_satoshis": 2425,
-               "their_reserve_msat": "2425000msat",
-               "our_channel_reserve_satoshis": 2425,
-               "our_reserve_msat": "2425000msat",
-               "spendable_msatoshi": 234763000,
-               "spendable_msat": "234763000msat",
-               "receivable_msatoshi": 0,
-               "receivable_msat": "0msat",
+               "max_total_htlc_in_msat": 18446744073709551615,
+               "their_reserve_msat": 2425000,
+               "our_reserve_msat": 2425000,
+               "spendable_msat": 234763000,
+               "receivable_msat": 0,
                "htlc_minimum_msat": 0,
-               "minimum_htlc_in_msat": "0msat",
+               "minimum_htlc_in_msat": 0,
                "their_to_self_delay": 144,
                "our_to_self_delay": 144,
                "max_accepted_htlcs": 30,
@@ -149,17 +140,16 @@ if [ "$1" = "test" ]; then
                   "CHANNELD_NORMAL:Funding transaction locked. Channel announced."
                ],
                "in_payments_offered": 0,
-               "in_msatoshi_offered": 0,
-               "in_offered_msat": "0msat",
+               "in_offered_msat": 0,
                "in_payments_fulfilled": 0,
                "in_msatoshi_fulfilled": 0,
-               "in_fulfilled_msat": "0msat",
+               "in_fulfilled_msat": 0,
                "out_payments_offered": 74,
                "out_msatoshi_offered": 10159164691,
-               "out_offered_msat": "10159164691msat",
+               "out_offered_msat": 10159164691,
                "out_payments_fulfilled": 0,
                "out_msatoshi_fulfilled": 0,
-               "out_fulfilled_msat": "0msat",
+               "out_fulfilled_msat": 0,
                "htlcs": []
             }
          ]
@@ -175,8 +165,8 @@ if [ "$1" = "test" ]; then
             {
                "state": "CHANNELD_NORMAL",
                "scratch_txid": "scratch_txid1_00000000000000000000000000000000000000000000000000",
-               "last_tx_fee": "1821000msat",
-               "last_tx_fee_msat": "1821000msat",
+               "last_tx_fee": 1821000,
+               "last_tx_fee_msat": 1821000,
                "feerate": {
                   "perkw": 2514,
                   "perkb": 10056
@@ -199,37 +189,37 @@ if [ "$1" = "test" ]; then
                   "amount100000000000000000000000000000000000000000000000000000000000": 300000000
                },
                "funding_msat": {
-                  "peerid200000000000000000000000000000000000000000000000000000000000": "0msat",
-                  "amount100000000000000000000000000000000000000000000000000000000000": "300000000msat"
+                  "peerid200000000000000000000000000000000000000000000000000000000000": 0,
+                  "amount100000000000000000000000000000000000000000000000000000000000": 300000000
                },
                "funding": {
-                  "local_msat": "300000000msat",
-                  "remote_msat": "0msat"
+                  "local_msat": 300000000,
+                  "remote_msat": 0
                },
                "msatoshi_to_us": 43581601,
-               "to_us_msat": "43581601msat",
+               "to_us_msat": 43581601,
                "msatoshi_to_us_min": 42170602,
-               "min_to_us_msat": "42170602msat",
+               "min_to_us_msat": 42170602,
                "msatoshi_to_us_max": 300000000,
-               "max_to_us_msat": "300000000msat",
+               "max_to_us_msat": 300000000,
                "msatoshi_total": 300000000,
-               "total_msat": "300000000msat",
-               "fee_base_msat": "1000msat",
+               "total_msat": 300000000,
+               "fee_base_msat": 1000,
                "fee_proportional_millionths": 10,
                "dust_limit_satoshis": 546,
-               "dust_limit_msat": "546000msat",
+               "dust_limit_msat": 546000,
                "max_htlc_value_in_flight_msat": 18446744073709551615,
-               "max_total_htlc_in_msat": "18446744073709551615msat",
+               "max_total_htlc_in_msat": 18446744073709551615,
                "their_channel_reserve_satoshis": 3000,
-               "their_reserve_msat": "3000000msat",
+               "their_reserve_msat": 3000000,
                "our_channel_reserve_satoshis": 3000,
-               "our_reserve_msat": "3000000msat",
+               "our_reserve_msat": 3000000,
                "spendable_msatoshi": 35212601,
-               "spendable_msat": "35212601msat",
+               "spendable_msat": 35212601,
                "receivable_msatoshi": 253418399,
-               "receivable_msat": "253418399msat",
+               "receivable_msat": 253418399,
                "htlc_minimum_msat": 0,
-               "minimum_htlc_in_msat": "0msat",
+               "minimum_htlc_in_msat": 0,
                "their_to_self_delay": 144,
                "our_to_self_delay": 144,
                "max_accepted_htlcs": 30,
@@ -248,16 +238,16 @@ if [ "$1" = "test" ]; then
                ],
                "in_payments_offered": 62,
                "in_msatoshi_offered": 7734200500,
-               "in_offered_msat": "7734200500msat",
+               "in_offered_msat": 7734200500,
                "in_payments_fulfilled": 11,
                "in_msatoshi_fulfilled": 2612000,
-               "in_fulfilled_msat": "2612000msat",
+               "in_fulfilled_msat": 2612000,
                "out_payments_offered": 6,
                "out_msatoshi_offered": 259030399,
-               "out_offered_msat": "259030399msat",
+               "out_offered_msat": 259030399,
                "out_payments_fulfilled": 6,
                "out_msatoshi_fulfilled": 259030399,
-               "out_fulfilled_msat": "259030399msat",
+               "out_fulfilled_msat": 259030399,
                "htlcs": []
             }
          ]
@@ -297,9 +287,7 @@ fi
 jsont=$(cat <<__EOF__
 {
    "total": [
-      [ "0", .peers[].channels[].total_msat 
-         | sub("msat";"") 
-         | tonumber 
+      [ 0, .peers[].channels[].total_msat 
       ] 
       | add 
       / 1000 
@@ -311,10 +299,8 @@ jsont=$(cat <<__EOF__
          "label": .netaddr[0],
          "value":[ 
             [ 
-               "0", 
+               0, 
                .channels[].total_msat  
-                  | sub("msat";"")  
-                  | tonumber 
             ] 
             | add 
             / 1000 
