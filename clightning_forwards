@@ -167,7 +167,8 @@ jsont=$(cat <<__EOF__
          [ 
             .forwards[] 
                | select(.in_msat)
-               | .in_msat 
+               | .in_msat
+               / 1000
          ], 
          [0]
       ]
@@ -178,7 +179,8 @@ jsont=$(cat <<__EOF__
          [ 
             .forwards[] 
                | select(.out_msat)
-               | .out_msat 
+               | .out_msat
+               / 1000
          ], 
          [0]
       ]
@@ -256,7 +258,7 @@ local_failed.label local_failed'
 multigraph forwards_amount
 
 graph_title Forwards amounts
-graph_vlabel msats
+graph_vlabel sats
 graph_category clightning
 graph_info This graph shows the forwards on your clightning node
 
