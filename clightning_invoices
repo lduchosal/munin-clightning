@@ -70,11 +70,9 @@ if [ "$1" = "test" ]; then
           "label": "label",
           "bolt11": "bolt11",
           "payment_hash": "payment_hash",
-          "msatoshi": 1000000,
           "amount_msat": 1000000,
           "status": "paid",
           "pay_index": 1,
-          "msatoshi_received": 1000000,
           "amount_received_msat": 1000000,
           "paid_at": 1628239212,
           "payment_preimage": "payment_preimage",
@@ -85,7 +83,6 @@ if [ "$1" = "test" ]; then
          "label": "label",
          "bolt11": "bolt11",
          "payment_hash": "payment_hash",
-         "msatoshi": 1000,
          "amount_msat": 1000,
          "status": "expired",
          "description": "un",
@@ -139,7 +136,17 @@ jsont=$(cat <<__EOF__
       "total": [
          [ 
             .invoices[] 
-               | .msatoshi 
+               | .amount_msat 
+         ], 
+         [0]
+      ] 
+      | add 
+      | add,
+
+      "received": [
+         [ 
+            .invoices[] 
+               | .amount_received_msat 
          ], 
          [0]
       ] 
@@ -150,7 +157,7 @@ jsont=$(cat <<__EOF__
          [ 
             .invoices[] 
                | select(.status == "expired") 
-               | .msatoshi 
+               | .amount_msat 
          ], 
          [0]
       ] 
@@ -161,7 +168,7 @@ jsont=$(cat <<__EOF__
          [ 
             .invoices[] 
                | select(.status == "paid") 
-               | .msatoshi 
+               | .amount_msat 
          ], 
          [0]
       ] 
@@ -196,6 +203,8 @@ graph_info This graph shows the invoices on your clightning node.
 
 total.label total
 total.draw LINE3
+received.label total
+received.draw LINE3
 expired.label expired
 expired.draw AREA
 paid.label paid
@@ -204,12 +213,14 @@ paid.draw AREASTACK
 multigraph invoices_amount
 
 graph_title Invoices amount
-graph_vlabel sats
+graph_vlabel msats
 graph_category clightning
 graph_info This graph shows the total invoices on your clightning node.
 
 total.label total
 total.draw LINE3
+received.label total
+received.draw LINE3
 expired.label expired
 expired.draw AREA
 paid.label paid
@@ -223,12 +234,14 @@ cat <<__EOF__
 multigraph invoices
 
 total.value $(echo $result | jq -r '.invoices.total')
+received.value $(echo $result | jq -r '.invoices.received')
 expired.value $(echo $result | jq -r '.invoices.expired')
 paid.value $(echo $result | jq -r '.invoices.paid')
 
 multigraph invoices_amount
 
 total.value $(echo $result | jq -r '.amount.total')
+received.value $(echo $result | jq -r '.amount.received')
 expired.value $(echo $result | jq -r '.amount.expired')
 paid.value $(echo $result | jq -r '.amount.paid')
 

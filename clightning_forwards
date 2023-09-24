@@ -69,11 +69,8 @@ if [ "$1" = "test" ]; then
       {
          "in_channel": "694360x1604x1",
          "out_channel": "694393x176x1",
-         "in_msatoshi": 1000,
          "in_msat": 1000,
-         "out_msatoshi": 1000,
          "out_msat": 1000,
-         "fee": 6000,
          "fee_msat": 6000,
          "status": "settled",
          "received_time": 1628388383.738,
@@ -82,11 +79,8 @@ if [ "$1" = "test" ]; then
       {
          "in_channel": "694360x1604x1",
          "out_channel": "694393x176x1",
-         "in_msatoshi": 500006000,
          "in_msat": 500006000,
-         "out_msatoshi": 500000000,
          "out_msat": 500000000,
-         "fee": 6000,
          "fee_msat": 6000,
          "status": "failed",
          "received_time": 1628388383.738,
@@ -95,11 +89,8 @@ if [ "$1" = "test" ]; then
       {
          "in_channel": "694360x1604x1",
          "out_channel": "694393x176x1",
-         "in_msatoshi": 500006000,
          "in_msat": 500006000,
-         "out_msatoshi": 500000000,
          "out_msat": 500000000,
-         "fee": 6000,
          "fee_msat": 6000,
          "status": "local_failed",
          "received_time": 1628388383.738,
@@ -107,9 +98,7 @@ if [ "$1" = "test" ]; then
       },
       {
          "in_channel": "694360x1604x1",
-         "in_msatoshi": 500006000,
          "in_msat": 500006000,
-         "fee": 6000,
          "fee_msat": 6000,
          "status": "local_failed",
          "received_time": 1628388383.738,
@@ -117,9 +106,7 @@ if [ "$1" = "test" ]; then
       },
       {
          "out_channel": "694393x176x1",
-         "out_msatoshi": 500000000,
          "out_msat": 500000000,
-         "fee": 6000,
          "fee_msat": 6000,
          "status": "local_failed",
          "received_time": 1628388383.738,
@@ -179,9 +166,8 @@ jsont=$(cat <<__EOF__
       "in": [
          [ 
             .forwards[] 
-               | select(.in_msatoshi)
-               | .in_msatoshi 
-               / 1000 
+               | select(.in_msat)
+               | .in_msat 
          ], 
          [0]
       ]
@@ -191,9 +177,8 @@ jsont=$(cat <<__EOF__
       "out": [
          [ 
             .forwards[] 
-               | select(.out_msatoshi)
-               | .out_msatoshi 
-               / 1000 
+               | select(.out_msat)
+               | .out_msat 
          ], 
          [0]
       ]
@@ -206,9 +191,8 @@ jsont=$(cat <<__EOF__
       "total": [
          [ 
             .forwards[] 
-               | select(.fee)
-               | .fee 
-               / 1000
+               | select(.fee_msat)
+               | .fee_msat 
          ], 
          [0]
       ] 
@@ -219,9 +203,8 @@ jsont=$(cat <<__EOF__
          [ 
             .forwards[] 
                | select(.status == "settled")
-               | select(.fee)
-               | .fee 
-               / 1000
+               | select(.fee_msat)
+               | .fee_msat 
          ], [0]
       ] 
       | add 
@@ -231,9 +214,8 @@ jsont=$(cat <<__EOF__
          [ 
             .forwards[] 
                | select(.status == "failed")
-               | select(.fee)
-               | .fee 
-               / 1000
+               | select(.fee_msat)
+               | .fee_msat 
          ], [0]
       ] 
       | add 
@@ -274,7 +256,7 @@ local_failed.label local_failed'
 multigraph forwards_amount
 
 graph_title Forwards amounts
-graph_vlabel sats
+graph_vlabel msats
 graph_category clightning
 graph_info This graph shows the forwards on your clightning node
 
@@ -284,7 +266,7 @@ out.label out'
 multigraph forwards_fees
 
 graph_title Forwards fees
-graph_vlabel sats
+graph_vlabel msats
 graph_category clightning
 graph_info This graph shows the forwards fees on your clightning node.
 

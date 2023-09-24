@@ -328,7 +328,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_category clightning'
     echo 'graph_info This graph shows the peers reported by lightningd.'
 
-    echo 'total.label total'
+    echo 'total.label total sats'
 
     for item in $(echo $result | jq -c '.peers[]'); do
         id=$(echo $item | jq -r ".id")

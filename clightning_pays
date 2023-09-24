@@ -73,7 +73,7 @@ if [ "$1" = "test" ]; then
          "created_at": 1628762052,
          "preimage": "preimage",
          "amount_msat": 1000000,
-         "amount_sent_msat": "1000000msat"
+         "amount_sent_msat": 1000000
       },
       {
          "bolt11": "bolt11",
@@ -83,7 +83,7 @@ if [ "$1" = "test" ]; then
          "created_at": 1628762052,
          "preimage": "preimage",
          "amount_msat": 1000000,
-         "amount_sent_msat": "1000000msat"
+         "amount_sent_msat": 1000000
       },
       {
          "bolt11": "bolt11",
@@ -93,7 +93,7 @@ if [ "$1" = "test" ]; then
          "created_at": 1628762052,
          "preimage": "preimage",
          "amount_msat": 1000000,
-         "amount_sent_msat": "1000000msat"
+         "amount_sent_msat": 1000000
       }
    ]
 }

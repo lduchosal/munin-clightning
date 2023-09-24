@@ -212,7 +212,7 @@ __EOF__
 multigraph channels_balance_$label
 
 graph_title channel balance $short_channel_id
-graph_vlabel sats
+graph_vlabel msats
 graph_category clightning
 graph_info This graph shows the balance of $short_channel_id.
 
