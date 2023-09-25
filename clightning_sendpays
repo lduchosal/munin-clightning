@@ -231,7 +231,7 @@ __EOF__
 
 result=$(echo $listsendpays | jq "$(echo $jsont)")
 
-if [ "$2" = "debug" ]; then
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
     echo $listsendpays | jq
     echo $result | jq
 fi

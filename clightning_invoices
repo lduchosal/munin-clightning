@@ -182,7 +182,7 @@ __EOF__
 
 result=$(echo $listinvoices | jq "$(echo $jsont)")
 
-if [ "$2" = "debug" ]; then
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
     echo $listinvoices | jq
     echo $result | jq
 fi

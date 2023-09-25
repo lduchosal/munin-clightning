@@ -156,7 +156,7 @@ __EOF__
 
 result=$(echo $listfunds | jq "$(echo $jsont)")
 
-if [ "$2" = "debug" ]; then
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
    cat <<__EOF__
 
 #

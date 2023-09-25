@@ -151,7 +151,7 @@ jsont=$(cat <<__EOF__
       "total": [
          [ 
             .pays[] 
-               | .amount_msat 
+               | .amount_sent_msat 
                / 1000
          ], [0]
       ] 
@@ -163,7 +163,7 @@ jsont=$(cat <<__EOF__
          [ 
             .pays[] 
                | select(.status == "complete") 
-               | .amount_msat 
+               | .amount_sent_msat 
                / 1000
          ], [0]
       ] 
@@ -175,7 +175,7 @@ jsont=$(cat <<__EOF__
          [ 
             .pays[] 
                | select(.status == "failed") 
-               | .amount_msat 
+               | .amount_sent_msat 
                / 1000
          ], [0]
       ] 
@@ -188,7 +188,7 @@ jsont=$(cat <<__EOF__
          [ 
             .pays[] 
                | select(.status == "pending") 
-               | .amount_msat 
+               | .amount_sent_msat 
                / 1000
          ], [0]
       ] 
@@ -202,7 +202,7 @@ __EOF__
 
 result=$(echo $listpays | jq "$(echo $jsont)")
 
-if [ "$2" = "debug" ]; then
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
     echo $listpays | jq
     echo $result | jq
 fi

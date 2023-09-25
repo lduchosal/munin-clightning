@@ -111,7 +111,7 @@ __EOF__
 fi
 
 
-if [ "$2" = "debug" ]; then
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
     echo $getinfo | jq
     echo $getchaininfo | jq
 fi
