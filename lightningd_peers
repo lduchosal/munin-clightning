@@ -63,203 +63,64 @@ listpeers=$($BINARY --lightning-dir=$DATA_DIR listpeers)
 
 if [ "$1" = "test" ]; then
 
-    listpeers=$(cat <<__EOF__
 {
    "peers": [
       {
-         "id": "peerid100000000000000000000000000000000000000000000000000000000000",
+         "id": "039ecb633664d6fa8a58ee0ab5f11f38b0f0a0a34897e4c6fef4de691485c41407",
          "connected": true,
+         "num_channels": 0,
          "netaddr": [
-            "1.1.1.1:9735"
+            "u5gvoigtlkcukaas3zgjksvvwkz7ca7gj7uljh6h5kop3ahfkagiivqd.onion:9735"
          ],
-         "features": "02a2a1",
-         "channels": [
-            {
-               "state": "CHANNELD_NORMAL",
-               "scratch_txid": "scratch_txid1_00000000000000000000000000000000000000000000000000",
-               "last_tx_fee_msat": 1820000,
-               "feerate": {
-                  "perkw": 2514,
-                  "perkb": 10056
-               },
-               "owner": "channeld",
-               "short_channel_id": "shortchanid_1",
-               "direction": 1,
-               "channel_id": "channelid1000000000000000000000000000000000000000000000000000000",
-               "funding_txid": "fundingtxid10000000000000000000000000000000000000000000000000000",
-               "close_to_addr": "bc1addr10000000000000000000000000000000000",
-               "close_to": "closeto1000000000000000000000000000000000000",
-               "private": false,
-               "opener": "local",
-               "closer": null,
-               "features": [
-                  "option_static_remotekey"
-               ],
-               "funding_allocation_msat": {
-                  "peerid100000000000000000000000000000000000000000000000000000000000": 0,
-                  "amount100000000000000000000000000000000000000000000000000000000000": 242557000
-               },
-               "funding_msat": {
-                  "peerid100000000000000000000000000000000000000000000000000000000000": 0,
-                  "amount100000000000000000000000000000000000000000000000000000000000": 242557000
-               },
-               "funding": {
-                  "local_msat": 242557000,
-                  "remote_msat": 0
-               },
-               "msatoshi_to_us": 242557000,
-               "to_us_msat": 242557000,
-               "min_to_us_msat": 242557000,
-               "max_to_us_msat": 242557000,
-               "total_msat": 242557000,
-               "fee_base_msat": 1000,
-               "fee_proportional_millionths": 10,
-               "dust_limit_msat": 546000,
-               "max_htlc_value_in_flight_msat": 18446744073709551615,
-               "max_total_htlc_in_msat": 18446744073709551615,
-               "their_reserve_msat": 2425000,
-               "our_reserve_msat": 2425000,
-               "spendable_msat": 234763000,
-               "receivable_msat": 0,
-               "htlc_minimum_msat": 0,
-               "minimum_htlc_in_msat": 0,
-               "their_to_self_delay": 144,
-               "our_to_self_delay": 144,
-               "max_accepted_htlcs": 30,
-               "state_changes": [
-                  {
-                     "timestamp": "2021-08-06T20:43:55.242Z",
-                     "old_state": "CHANNELD_AWAITING_LOCKIN",
-                     "new_state": "CHANNELD_NORMAL",
-                     "cause": "user",
-                     "message": "Lockin complete"
-                  }
-               ],
-               "status": [
-                  "CHANNELD_NORMAL:Reconnected, and reestablished.",
-                  "CHANNELD_NORMAL:Funding transaction locked. Channel announced."
-               ],
-               "in_payments_offered": 0,
-               "in_offered_msat": 0,
-               "in_payments_fulfilled": 0,
-               "in_msatoshi_fulfilled": 0,
-               "in_fulfilled_msat": 0,
-               "out_payments_offered": 74,
-               "out_msatoshi_offered": 10159164691,
-               "out_offered_msat": 10159164691,
-               "out_payments_fulfilled": 0,
-               "out_msatoshi_fulfilled": 0,
-               "out_fulfilled_msat": 0,
-               "htlcs": []
-            }
-         ]
+         "features": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020008a8251a1"
       },
       {
-         "id": "peerid200000000000000000000000000000000000000000000000000000000000",
+         "id": "02faa433f03dec55f87a0184003813919f0936d2d67902a7bc9196592e52f9cbea",
          "connected": true,
+         "num_channels": 0,
          "netaddr": [
-            "127.0.0.1:63672"
+            "170.75.167.59:9735"
          ],
-         "features": "8peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000808a52a1",
-         "channels": [
-            {
-               "state": "CHANNELD_NORMAL",
-               "scratch_txid": "scratch_txid1_00000000000000000000000000000000000000000000000000",
-               "last_tx_fee": 1821000,
-               "last_tx_fee_msat": 1821000,
-               "feerate": {
-                  "perkw": 2514,
-                  "perkb": 10056
-               },
-               "owner": "channeld",
-               "short_channel_id": "695394x571x1",
-               "direction": 0,
-               "channel_id": "channelid2000000000000000000000000000000000000000000000000000000",
-               "funding_txid": "fundingtxid20000000000000000000000000000000000000000000000000000",
-               "close_to_addr": "bc1closetoaddr0000000000000000000000000000",
-               "close_to": "close_to000000000000000000000000000000000000",
-               "private": false,
-               "opener": "local",
-               "closer": null,
-               "features": [
-                  "option_static_remotekey"
-               ],
-               "funding_allocation_msat": {
-                  "peerid200000000000000000000000000000000000000000000000000000000000": 0,
-                  "amount100000000000000000000000000000000000000000000000000000000000": 300000000
-               },
-               "funding_msat": {
-                  "peerid200000000000000000000000000000000000000000000000000000000000": 0,
-                  "amount100000000000000000000000000000000000000000000000000000000000": 300000000
-               },
-               "funding": {
-                  "local_msat": 300000000,
-                  "remote_msat": 0
-               },
-               "msatoshi_to_us": 43581601,
-               "to_us_msat": 43581601,
-               "msatoshi_to_us_min": 42170602,
-               "min_to_us_msat": 42170602,
-               "msatoshi_to_us_max": 300000000,
-               "max_to_us_msat": 300000000,
-               "msatoshi_total": 300000000,
-               "total_msat": 300000000,
-               "fee_base_msat": 1000,
-               "fee_proportional_millionths": 10,
-               "dust_limit_satoshis": 546,
-               "dust_limit_msat": 546000,
-               "max_htlc_value_in_flight_msat": 18446744073709551615,
-               "max_total_htlc_in_msat": 18446744073709551615,
-               "their_channel_reserve_satoshis": 3000,
-               "their_reserve_msat": 3000000,
-               "our_channel_reserve_satoshis": 3000,
-               "our_reserve_msat": 3000000,
-               "spendable_msatoshi": 35212601,
-               "spendable_msat": 35212601,
-               "receivable_msatoshi": 253418399,
-               "receivable_msat": 253418399,
-               "htlc_minimum_msat": 0,
-               "minimum_htlc_in_msat": 0,
-               "their_to_self_delay": 144,
-               "our_to_self_delay": 144,
-               "max_accepted_htlcs": 30,
-               "state_changes": [
-                  {
-                     "timestamp": "2021-08-12T09:51:46.569Z",
-                     "old_state": "CHANNELD_AWAITING_LOCKIN",
-                     "new_state": "CHANNELD_NORMAL",
-                     "cause": "user",
-                     "message": "Lockin complete"
-                  }
-               ],
-               "status": [
-                  "CHANNELD_NORMAL:Reconnected, and reestablished.",
-                  "CHANNELD_NORMAL:Funding transaction locked. Channel announced."
-               ],
-               "in_payments_offered": 62,
-               "in_msatoshi_offered": 7734200500,
-               "in_offered_msat": 7734200500,
-               "in_payments_fulfilled": 11,
-               "in_msatoshi_fulfilled": 2612000,
-               "in_fulfilled_msat": 2612000,
-               "out_payments_offered": 6,
-               "out_msatoshi_offered": 259030399,
-               "out_offered_msat": 259030399,
-               "out_payments_fulfilled": 6,
-               "out_msatoshi_fulfilled": 259030399,
-               "out_fulfilled_msat": 259030399,
-               "htlcs": []
-            }
-         ]
+         "features": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020008a8a51a1"
       },
       {
-         "id": "peerid300000000000000000000000000000000000000000000000000000000000",
+         "id": "031f2669adab71548fad4432277a0d90233e3bc07ac29cfb0b3e01bd3fb26cb9fa",
          "connected": true,
+         "num_channels": 0,
          "netaddr": [
-            "127.0.0.1:64890"
+            "44.242.118.94:9735"
          ],
-         "features": "8peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid100000000000000000000000000000000000000000000000000000000000peerid10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000808252a1",
-         "channels": []
+         "features": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020008a8a51a1"
+      },
+      {
+         "id": "02109ab6b08d040364c660cc176ce54b1bbcb6c33c2fab3e26a63ec3b260927d72",
+         "connected": true,
+         "num_channels": 0,
+         "netaddr": [
+            "180.131.125.105:9735"
+         ],
+         "features": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020008a8251a1"
+      },
+      {
+         "id": "02109ab6b08d040364c660cc176ce54b1bbcb6c33c2fab3e26a63ec3b260927d72",
+         "connected": true,
+         "num_channels": 0,
+         "netaddr": [
+            "180.131.125.105:9735"
+         ],
+         "features": "800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020008a8251a1"
+      },
+      {
+         "id": "03e2408a49f07d2f4083a47344138ef89e7617e63919202c92aa8d49b574a560ae",
+         "connected": true,
+         "num_channels": 0,
+         "netaddr": [
+            "65.108.246.14:19736"
+         ],
+         "remote_addr": "176.65.149.88:36094",
+         "features": "08a0882a8a59a1"
       }
    ]
 }
@@ -286,30 +147,18 @@ fi
 
 jsont=$(cat <<__EOF__
 {
-   "total": [
-      [ 0, .peers[].channels[].total_msat 
-      ] 
-      | add 
-      / 1000 
-   ][0],
-
+   "total": .peers | length,
    "peers": [ 
       .peers[] | {
          "id": .id,
          "label": .netaddr[0],
-         "value":[ 
-            [ 
-               0, 
-               .channels[].total_msat  
-            ] 
-            | add 
-            / 1000 
-         ][0]
-      }],
+         "value": .num_channels
+      }]
 
 }
 __EOF__
 )
+
 result=$(echo $listpeers | jq "$(echo $jsont)")
 if [ "$1" = "debug" ]; then
     echo $listpeers | jq
