@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-lightningd_feerates_perkb - Plugin to monitor your c-lightning node
+lightningd_feerates_perkb - Plugin to monitor your lightningd node
 
 =head1 CONFIGURATION
 
@@ -104,7 +104,7 @@ if [ "$1" = "config" ]; then
 
 cat <<__EOF__
 multigraph feerates_perkb
-graph_title c-lightning feerates perkb
+graph_title lightningd feerates perkb
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the feerates perkb reported by lightningd.
@@ -117,7 +117,7 @@ perkb_htlc_resolution.label htlc_resolution
 perkb_penalty.label penalty
 
 multigraph feerates_perkb_acceptable
-graph_title c-lightning feerates perkb acceptable
+graph_title lightningd feerates perkb acceptable
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the acceptable feerates perkb reported by lightningd.
@@ -127,7 +127,7 @@ perkb_min_acceptable.label min_acceptable
 perkb_max_acceptable.label max_acceptable
 
 multigraph feerates_perkb_onchain
-graph_title c-lightning feerates perkb onchain
+graph_title lightningd feerates perkb onchain
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the onchain feerates perkb reported by lightningd.

@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-lightningd_info - Plugin to monitor your c-lightning node
+lightningd_info - Plugin to monitor your lightningd node
 
 =head1 CONFIGURATION
 
@@ -122,7 +122,7 @@ fi
 #
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title c-lightning chain info'
+    echo 'graph_title lightningd chain info'
     echo 'graph_vlabel blocks'
     echo 'graph_category lightningd'
     echo 'graph_info This graph shows the info reported by lightningd.'

@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-lightningd_peers - Plugin to monitor your c-lightning node
+lightningd_peers - Plugin to monitor your lightningd node
 
 =head1 CONFIGURATION
 
@@ -323,7 +323,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-    echo 'graph_title c-lightning peers info'
+    echo 'graph_title lightningd peers info'
     echo 'graph_vlabel peers'
     echo 'graph_category lightningd'
     echo 'graph_info This graph shows the peers reported by lightningd.'

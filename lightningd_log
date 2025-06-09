@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-lightningd_log - Plugin to monitor your c-lightning node
+lightningd_log - Plugin to monitor your lightningd node
 
 =head1 CONFIGURATION
 
@@ -89,7 +89,7 @@ fi
 #
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title c-lightning log'
+    echo 'graph_title lightningd log'
     echo 'graph_vlabel bytes'
     echo 'graph_category lightningd'
     echo 'graph_info This graph shows the log info reported by lightningd.'
