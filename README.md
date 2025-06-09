@@ -5,14 +5,14 @@
 
 1. Install jq as dependency
 
-1. Link the `clightning_*` scripts to `/etc/munin/plugins`.
+1. Link the `lightningd_*` scripts to `/etc/munin/plugins`.
 
 1. If you're using SELinux, don't forget to `chcon` them properly.
 
 1. Configure the plugins by creating a file named `/etc/munin/plugin-conf.d/bitcoind` with this content:
 
     ```
-    [clightning_*]
+    [lightningd_*]
     user bitcoin
     ```
 
@@ -20,7 +20,7 @@
 
 1. Restart the *munin-node* daemon with `systemctl restart munin-node` or `/etc/init.d/munin-node restart`.
 
-1. Done. You should now start to see a new section *clightning* in your Munin pages with the corresponding graphs.
+1. Done. You should now start to see a new section *lightningd* in your Munin pages with the corresponding graphs.
 
 1. After a while, images 
 

@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_invoices - Plugin to monitor your invoices on the lightning network
+lightningd_invoices - Plugin to monitor your invoices on the lightning network
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -198,8 +198,8 @@ multigraph invoices
 
 graph_title Invoices
 graph_vlabel invoices
-graph_category clightning
-graph_info This graph shows the invoices on your clightning node.
+graph_category lightningd
+graph_info This graph shows the invoices on your lightningd node.
 
 total.label total
 total.draw LINE3
@@ -214,8 +214,8 @@ multigraph invoices_amount
 
 graph_title Invoices amount
 graph_vlabel msats
-graph_category clightning
-graph_info This graph shows the total invoices on your clightning node.
+graph_category lightningd
+graph_info This graph shows the total invoices on your lightningd node.
 
 total.label total
 total.draw LINE3

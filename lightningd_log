@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_log - Plugin to monitor your c-lightning node
+lightningd_log - Plugin to monitor your c-lightning node
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -91,7 +91,7 @@ fi
 if [ "$1" = "config" ]; then
     echo 'graph_title c-lightning log'
     echo 'graph_vlabel bytes'
-    echo 'graph_category clightning'
+    echo 'graph_category lightningd'
     echo 'graph_info This graph shows the log info reported by lightningd.'
     echo "bytes_used.label used"
     echo "bytes_max.label max"

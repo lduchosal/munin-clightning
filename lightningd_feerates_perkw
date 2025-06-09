@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_feerates_perkw - Plugin to monitor your c-lightning node
+lightningd_feerates_perkw - Plugin to monitor your c-lightning node
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -104,7 +104,7 @@ cat <<__EOF__
 multigraph feerates_perkw
 graph_title c-lightning feerates perkw
 graph_vlabel sats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the feerates perkw.
 
 perkw_opening.label opening
@@ -117,7 +117,7 @@ perkw_penalty.label penalty
 multigraph feerates_perkw_acceptable
 graph_title c-lightning feerates perkw
 graph_vlabel sats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the feerates perkw acceptable.
 graph_args --logarithmic
 
@@ -127,7 +127,7 @@ perkw_max_acceptable.label max_acceptable
 multigraph feerates_perkw_onchain
 graph_title c-lightning feerates perkw
 graph_vlabel sats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the feerates perkw onchain.
 
 onchain_opening.label onchain_opening

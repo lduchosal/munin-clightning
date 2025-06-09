@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_peers - Plugin to monitor your c-lightning node
+lightningd_peers - Plugin to monitor your c-lightning node
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -325,7 +325,7 @@ if [ "$1" = "config" ]; then
 
     echo 'graph_title c-lightning peers info'
     echo 'graph_vlabel peers'
-    echo 'graph_category clightning'
+    echo 'graph_category lightningd'
     echo 'graph_info This graph shows the peers reported by lightningd.'
 
     echo 'total.label total sats'

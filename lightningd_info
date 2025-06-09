@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_info - Plugin to monitor your c-lightning node
+lightningd_info - Plugin to monitor your c-lightning node
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -124,13 +124,13 @@ fi
 if [ "$1" = "config" ]; then
     echo 'graph_title c-lightning chain info'
     echo 'graph_vlabel blocks'
-    echo 'graph_category clightning'
+    echo 'graph_category lightningd'
     echo 'graph_info This graph shows the info reported by lightningd.'
-    echo "clightning_blockheight.label clightning blockheight ($(echo $getinfo | jq -r '.network'))'"
+    echo "lightningd_blockheight.label lightningd blockheight ($(echo $getinfo | jq -r '.network'))'"
     echo "chain_blockcount.label bitcoin blockheight ($(echo $getchaininfo | jq -r '.chain'))'"
 
     exit 0
 fi
 
-echo "clightning_blockheight.value $(echo $getinfo | jq -r '.blockheight')"
+echo "lightningd_blockheight.value $(echo $getinfo | jq -r '.blockheight')"
 echo "chain_blockcount.value $(echo $getchaininfo | jq -r '.blockcount')"

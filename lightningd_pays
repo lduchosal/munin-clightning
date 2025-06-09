@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_pays - Plugin to monitor your pays on the lightning network
+lightningd_pays - Plugin to monitor your pays on the lightning network
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -219,8 +219,8 @@ multigraph pays
 
 graph_title Pays
 graph_vlabel pays
-graph_category clightning
-graph_info This graph shows the pays on your clightning node.
+graph_category lightningd
+graph_info This graph shows the pays on your lightningd node.
 
 total.label total
 complete.label complete
@@ -234,8 +234,8 @@ multigraph pays_amount
 
 graph_title Pays amount
 graph_vlabel sats
-graph_category clightning
-graph_info This graph shows the pays on your clightning node.
+graph_category lightningd
+graph_info This graph shows the pays on your lightningd node.
 
 total.label total
 complete.label complete

@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_funds - Plugin to monitor your funds (channels and funds) on the lightning network
+lightningd_funds - Plugin to monitor your funds (channels and funds) on the lightning network
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -216,7 +216,7 @@ multigraph funds
 
 graph_title Channel and funds
 graph_vlabel sats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the sats available on open channels and remaining funds.
 
 total.label total
@@ -233,7 +233,7 @@ multigraph funds_outputs
 
 graph_title Channel and funds / Outputs
 graph_vlabel sats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the sats available on available outputs
 
 
@@ -256,7 +256,7 @@ multigraph funds_channels
 
 graph_title Channel and funds / Channels
 graph_vlabel sats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the sats available on open channels
 
 

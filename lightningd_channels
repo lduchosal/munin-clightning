@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_channels - Plugin to monitor your channels on the lightning network
+lightningd_channels - Plugin to monitor your channels on the lightning network
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -190,7 +190,7 @@ multigraph channels
 
 graph_title Channel count
 graph_vlabel number of channels
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the number of open channels.
 total.label total
 total.draw LINE3
@@ -213,7 +213,7 @@ multigraph channels_balance_$label
 
 graph_title channel balance $short_channel_id
 graph_vlabel msats
-graph_category clightning
+graph_category lightningd
 graph_info This graph shows the balance of $short_channel_id.
 
 our.label our

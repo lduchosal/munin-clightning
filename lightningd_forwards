@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-clightning_forwards - Plugin to monitor your forwards on the lightning network
+lightningd_forwards - Plugin to monitor your forwards on the lightning network
 
 =head1 CONFIGURATION
 
- [clightning_*]
+ [lightningd_*]
     user bitcoin
     env.binary lightning-cli
     env.data_dir /var/db/c-lightning
@@ -247,8 +247,8 @@ multigraph forwards
 
 graph_title Forwards
 graph_vlabel forwards
-graph_category clightning
-graph_info This graph shows the forwards on your clightning node
+graph_category lightningd
+graph_info This graph shows the forwards on your lightningd node
 
 total.label total
 settled.label settled
@@ -259,8 +259,8 @@ multigraph forwards_amount
 
 graph_title Forwards amounts
 graph_vlabel sats
-graph_category clightning
-graph_info This graph shows the forwards on your clightning node
+graph_category lightningd
+graph_info This graph shows the forwards on your lightningd node
 
 in.label in
 out.label out'
@@ -269,8 +269,8 @@ multigraph forwards_fees
 
 graph_title Forwards fees
 graph_vlabel msats
-graph_category clightning
-graph_info This graph shows the forwards fees on your clightning node.
+graph_category lightningd
+graph_info This graph shows the forwards fees on your lightningd node.
 
 total.label total
 settled.label settled
