@@ -1,0 +1,404 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_clboss - Plugin to monitor CLBOSS health and metrics
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+clboss_cmd() {
+    $BINARY --lightning-dir=$DATA_DIR "$@" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if clboss_cmd clboss-status >/dev/null 2>&1; then
+        echo "yes"
+    else
+        echo "no (clboss not running)"
+    fi
+    exit 0
+fi
+
+#
+# Get CLBOSS status
+#
+
+STATUS=$(clboss_cmd clboss-status 2>/dev/null)
+
+if [ -z "$STATUS" ]; then
+    if [ "$1" = "config" ]; then
+        cat <<EOF
+multigraph clboss_status
+graph_title CLBOSS Status
+graph_vlabel status
+graph_category lightningd
+graph_info CLBOSS plugin status
+
+running.label Running
+running.draw LINE2
+EOF
+        exit 0
+    fi
+    echo "multigraph clboss_status"
+    echo "running.value 0"
+    exit 0
+fi
+
+#
+# Parse CLBOSS status
+#
+
+# Internet connection
+internet=$(echo "$STATUS" | jq -r '.internet.connection // "unknown"')
+internet_status=0
+[ "$internet" = "online" ] && internet_status=1
+
+# On-chain feerate
+feerate_judgment=$(echo "$STATUS" | jq -r '.onchain_feerate.judgment // "unknown"')
+feerate_last=$(echo "$STATUS" | jq -r '.onchain_feerate.last_feerate_perkw // 0')
+feerate_low=0
+[ "$feerate_judgment" = "low fees" ] && feerate_low=1
+
+# Uptime
+uptime_3d=$(echo "$STATUS" | jq -r '.my_uptime.past_3_days // 0')
+uptime_2w=$(echo "$STATUS" | jq -r '.my_uptime.past_2_weeks // 0')
+uptime_1m=$(echo "$STATUS" | jq -r '.my_uptime.past_1_month // 0')
+
+# Convert to percentage
+uptime_3d_pct=$(echo "$uptime_3d * 100" | bc 2>/dev/null | cut -d. -f1 || echo "0")
+uptime_2w_pct=$(echo "$uptime_2w * 100" | bc 2>/dev/null | cut -d. -f1 || echo "0")
+uptime_1m_pct=$(echo "$uptime_1m * 100" | bc 2>/dev/null | cut -d. -f1 || echo "0")
+
+# Channel candidates
+candidates_count=$(echo "$STATUS" | jq -r '.channel_candidates | length // 0')
+candidates_online=$(echo "$STATUS" | jq -r '[.channel_candidates[] | select(.onlineness >= 20)] | length // 0')
+
+# Peer metrics count
+peer_count=$(echo "$STATUS" | jq -r '.peer_metrics | length // 0')
+
+# Peer complaints
+complaints_peers=$(echo "$STATUS" | jq -r '.peer_complaints | length // 0')
+complaints_total=$(echo "$STATUS" | jq -r '[.peer_complaints | to_entries[] | .value | length] | add // 0')
+
+# Earnings totals (from offchain_earnings_tracker.total)
+total_in_earnings=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.in_earnings // 0')
+total_out_earnings=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.out_earnings // 0')
+total_in_expenditures=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.in_expenditures // 0')
+total_out_expenditures=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.out_expenditures // 0')
+total_in_forwarded=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.in_forwarded // 0')
+total_out_forwarded=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.out_forwarded // 0')
+total_in_rebalanced=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.in_rebalanced // 0')
+total_out_rebalanced=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker.total.out_rebalanced // 0')
+
+# Convert to sats
+earnings_sat=$((total_in_earnings / 1000))
+expenditures_sat=$((total_in_expenditures / 1000))
+net_earnings_sat=$((earnings_sat - expenditures_sat))
+forwarded_sat=$((total_in_forwarded / 1000))
+rebalanced_sat=$((total_in_rebalanced / 1000))
+
+# Swap report
+swap_count=$(echo "$STATUS" | jq -r '.swap_report.swaps | length // 0')
+swap_loss_pct=$(echo "$STATUS" | jq -r '.swap_report.percent_loss // 0')
+swap_total_sent=$(echo "$STATUS" | jq -r '.swap_report.total_amount_sent // "0msat"' | sed 's/msat//')
+swap_total_received=$(echo "$STATUS" | jq -r '.swap_report.total_amount_received // "0msat"' | sed 's/msat//')
+swap_total_loss=$(echo "$STATUS" | jq -r '.swap_report.loss // "0msat"' | sed 's/msat//')
+
+# Convert to sats
+swap_sent_sat=$((swap_total_sent / 1000))
+swap_received_sat=$((swap_total_received / 1000))
+swap_loss_sat=$((swap_total_loss / 1000))
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph clboss_status
+graph_title CLBOSS Status
+graph_vlabel status (1=yes, 0=no)
+graph_category lightningd
+graph_info CLBOSS operational status
+
+running.label Running
+running.draw LINE2
+internet.label Internet Online
+internet.draw LINE2
+feerate_low.label Fees Low
+feerate_low.draw LINE2
+feerate_low.info CLBOSS considers on-chain fees low
+
+multigraph clboss_uptime
+graph_title CLBOSS Node Uptime
+graph_vlabel percent
+graph_category lightningd
+graph_info Node uptime as tracked by CLBOSS
+graph_args --lower-limit 0 --upper-limit 100
+
+uptime_3d.label Past 3 Days
+uptime_3d.draw LINE2
+uptime_3d.warning 95:
+uptime_3d.critical 90:
+uptime_2w.label Past 2 Weeks
+uptime_2w.draw LINE2
+uptime_1m.label Past Month
+uptime_1m.draw LINE2
+
+multigraph clboss_feerate
+graph_title CLBOSS On-Chain Feerate
+graph_vlabel sat/kw
+graph_category lightningd
+graph_info On-chain feerate as seen by CLBOSS
+
+feerate.label Feerate
+feerate.draw LINE2
+
+multigraph clboss_candidates
+graph_title CLBOSS Channel Candidates
+graph_vlabel count
+graph_category lightningd
+graph_info Channel candidates being tracked
+
+total.label Total Candidates
+total.draw LINE2
+online.label High Uptime (>=20)
+online.draw AREA
+online.colour 00AA00
+
+multigraph clboss_peers
+graph_title CLBOSS Tracked Peers
+graph_vlabel count
+graph_category lightningd
+graph_info Peers with metrics
+
+peers.label Peers Tracked
+peers.draw LINE2
+
+multigraph clboss_complaints
+graph_title CLBOSS Peer Complaints
+graph_vlabel count
+graph_category lightningd
+graph_info Complaints about peers
+
+peers_with_complaints.label Peers with Complaints
+peers_with_complaints.draw LINE2
+total_complaints.label Total Complaints
+total_complaints.draw LINE2
+total_complaints.colour AA0000
+
+multigraph clboss_earnings
+graph_title CLBOSS Earnings Tracker
+graph_vlabel sats
+graph_category lightningd
+graph_info Off-chain earnings tracked by CLBOSS
+
+earnings.label Earnings
+earnings.draw AREA
+earnings.colour 00AA00
+expenditures.label Expenditures
+expenditures.draw LINE2
+expenditures.colour AA0000
+net.label Net
+net.draw LINE2
+net.colour 000000
+
+multigraph clboss_volume
+graph_title CLBOSS Volume Tracker
+graph_vlabel sats
+graph_category lightningd
+graph_info Volume tracked by CLBOSS
+
+forwarded.label Forwarded
+forwarded.draw AREA
+forwarded.colour 0000AA
+rebalanced.label Rebalanced
+rebalanced.draw LINE2
+rebalanced.colour FFAA00
+
+multigraph clboss_swaps
+graph_title CLBOSS Swap Statistics
+graph_vlabel count / sats
+graph_category lightningd
+graph_info Swap operations performed by CLBOSS
+
+swap_count.label Swap Count
+swap_count.draw LINE2
+swap_loss_sat.label Total Loss (sats)
+swap_loss_sat.draw LINE2
+swap_loss_sat.colour AA0000
+
+multigraph clboss_swap_efficiency
+graph_title CLBOSS Swap Efficiency
+graph_vlabel percent loss
+graph_category lightningd
+graph_info Percentage lost in swaps
+graph_args --lower-limit 0
+
+loss_pct.label Loss %
+loss_pct.draw LINE2
+loss_pct.warning 3
+loss_pct.critical 5
+EOF
+
+    # Per-peer earnings
+    peer_keys=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker | keys[] | select(. != "total")' 2>/dev/null | head -10)
+    if [ -n "$peer_keys" ]; then
+        cat <<EOF
+
+multigraph clboss_peer_earnings
+graph_title CLBOSS Per-Peer Earnings
+graph_vlabel msat/day
+graph_category lightningd
+graph_info Daily earnings per peer
+
+EOF
+        echo "$peer_keys" | while read peer; do
+            if [ -n "$peer" ]; then
+                sid=$(echo "$peer" | cut -c1-8)
+                echo "peer_${sid}_in.label ${sid}... (in)"
+                echo "peer_${sid}_in.draw LINE1"
+                echo "peer_${sid}_out.label ${sid}... (out)"
+                echo "peer_${sid}_out.draw LINE1"
+            fi
+        done
+
+        cat <<EOF
+
+multigraph clboss_peer_connect_rate
+graph_title CLBOSS Peer Connect Rate
+graph_vlabel ratio (0-1)
+graph_category lightningd
+graph_info Connection rate per peer
+graph_args --lower-limit 0 --upper-limit 1
+
+EOF
+        echo "$STATUS" | jq -r '.peer_metrics | keys[]' 2>/dev/null | while read peer; do
+            if [ -n "$peer" ]; then
+                sid=$(echo "$peer" | cut -c1-8)
+                echo "peer_${sid}.label ${sid}..."
+                echo "peer_${sid}.draw LINE1"
+            fi
+        done
+    fi
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph clboss_status
+
+running.value 1
+internet.value $internet_status
+feerate_low.value $feerate_low
+
+multigraph clboss_uptime
+
+uptime_3d.value $uptime_3d_pct
+uptime_2w.value $uptime_2w_pct
+uptime_1m.value $uptime_1m_pct
+
+multigraph clboss_feerate
+
+feerate.value $feerate_last
+
+multigraph clboss_candidates
+
+total.value $candidates_count
+online.value $candidates_online
+
+multigraph clboss_peers
+
+peers.value $peer_count
+
+multigraph clboss_complaints
+
+peers_with_complaints.value $complaints_peers
+total_complaints.value $complaints_total
+
+multigraph clboss_earnings
+
+earnings.value $earnings_sat
+expenditures.value $expenditures_sat
+net.value $net_earnings_sat
+
+multigraph clboss_volume
+
+forwarded.value $forwarded_sat
+rebalanced.value $rebalanced_sat
+
+multigraph clboss_swaps
+
+swap_count.value $swap_count
+swap_loss_sat.value $swap_loss_sat
+
+multigraph clboss_swap_efficiency
+
+loss_pct.value $swap_loss_pct
+EOF
+
+# Per-peer earnings values
+peer_keys=$(echo "$STATUS" | jq -r '.offchain_earnings_tracker | keys[] | select(. != "total")' 2>/dev/null | head -10)
+if [ -n "$peer_keys" ]; then
+    echo ""
+    echo "multigraph clboss_peer_earnings"
+    echo ""
+
+    echo "$peer_keys" | while read peer; do
+        if [ -n "$peer" ]; then
+            sid=$(echo "$peer" | cut -c1-8)
+            in_fee=$(echo "$STATUS" | jq -r ".peer_metrics[\"$peer\"].in_fee_msat_per_day // 0")
+            out_fee=$(echo "$STATUS" | jq -r ".peer_metrics[\"$peer\"].out_fee_msat_per_day // 0")
+            echo "peer_${sid}_in.value $in_fee"
+            echo "peer_${sid}_out.value $out_fee"
+        fi
+    done
+
+    echo ""
+    echo "multigraph clboss_peer_connect_rate"
+    echo ""
+
+    echo "$STATUS" | jq -r '.peer_metrics | to_entries[] | "\(.key) \(.value.connect_rate // 0)"' 2>/dev/null | while read line; do
+        peer=$(echo "$line" | cut -d' ' -f1)
+        rate=$(echo "$line" | cut -d' ' -f2)
+        if [ -n "$peer" ]; then
+            sid=$(echo "$peer" | cut -c1-8)
+            echo "peer_${sid}.value $rate"
+        fi
+    done
+fi

@@ -1,0 +1,284 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_sql_forwards - Plugin to monitor forwarding stats via SQL queries
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+sql_query() {
+    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+# Get current time minus 24h for daily stats
+NOW=$(date +%s)
+DAY_AGO=$((NOW - 86400))
+HOUR_AGO=$((NOW - 3600))
+
+#
+# Queries
+#
+
+# Total forwards stats (all time)
+TOTAL_STATS=$(sql_query "SELECT
+    COUNT(*) as total,
+    COALESCE(SUM(CASE WHEN status='settled' THEN 1 ELSE 0 END), 0) as settled,
+    COALESCE(SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END), 0) as failed,
+    COALESCE(SUM(CASE WHEN status='local_failed' THEN 1 ELSE 0 END), 0) as local_failed,
+    COALESCE(SUM(CASE WHEN status='offered' THEN 1 ELSE 0 END), 0) as offered,
+    COALESCE(SUM(CASE WHEN status='settled' THEN fee_msat ELSE 0 END), 0) as total_fees,
+    COALESCE(SUM(CASE WHEN status='settled' THEN in_msat ELSE 0 END), 0) as total_volume
+FROM forwards")
+
+# Last 24h stats
+DAILY_STATS=$(sql_query "SELECT
+    COUNT(*) as total,
+    COALESCE(SUM(CASE WHEN status='settled' THEN 1 ELSE 0 END), 0) as settled,
+    COALESCE(SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END), 0) as failed,
+    COALESCE(SUM(CASE WHEN status='settled' THEN fee_msat ELSE 0 END), 0) as fees,
+    COALESCE(SUM(CASE WHEN status='settled' THEN in_msat ELSE 0 END), 0) as volume
+FROM forwards
+WHERE received_time >= $DAY_AGO")
+
+# Last hour stats
+HOURLY_STATS=$(sql_query "SELECT
+    COUNT(*) as total,
+    COALESCE(SUM(CASE WHEN status='settled' THEN 1 ELSE 0 END), 0) as settled,
+    COALESCE(SUM(CASE WHEN status='settled' THEN fee_msat ELSE 0 END), 0) as fees
+FROM forwards
+WHERE received_time >= $HOUR_AGO")
+
+# Per-channel stats (last 24h)
+CHANNEL_STATS=$(sql_query "SELECT
+    in_channel,
+    COUNT(*) as total,
+    SUM(CASE WHEN status='settled' THEN 1 ELSE 0 END) as settled,
+    SUM(CASE WHEN status='settled' THEN fee_msat ELSE 0 END) as fees
+FROM forwards
+WHERE received_time >= $DAY_AGO
+GROUP BY in_channel")
+
+# Parse results
+total_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][0] // 0')
+settled_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][1] // 0')
+failed_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][2] // 0')
+local_failed_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][3] // 0')
+offered_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][4] // 0')
+fees_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][5] // 0')
+volume_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][6] // 0')
+
+daily_total=$(echo "$DAILY_STATS" | jq -r '.rows[0][0] // 0')
+daily_settled=$(echo "$DAILY_STATS" | jq -r '.rows[0][1] // 0')
+daily_failed=$(echo "$DAILY_STATS" | jq -r '.rows[0][2] // 0')
+daily_fees=$(echo "$DAILY_STATS" | jq -r '.rows[0][3] // 0')
+daily_volume=$(echo "$DAILY_STATS" | jq -r '.rows[0][4] // 0')
+
+hourly_total=$(echo "$HOURLY_STATS" | jq -r '.rows[0][0] // 0')
+hourly_settled=$(echo "$HOURLY_STATS" | jq -r '.rows[0][1] // 0')
+hourly_fees=$(echo "$HOURLY_STATS" | jq -r '.rows[0][2] // 0')
+
+# Convert msat to sats
+fees_all_sat=$((fees_all / 1000))
+volume_all_sat=$((volume_all / 1000))
+daily_fees_sat=$((daily_fees / 1000))
+daily_volume_sat=$((daily_volume / 1000))
+hourly_fees_sat=$((hourly_fees / 1000))
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph forwards_count
+graph_title Forwards Count (All Time)
+graph_vlabel count
+graph_category lightningd
+graph_info Total number of forwarded payments by status
+
+total.label Total
+total.draw LINE2
+total.info Total forwards attempted
+settled.label Settled
+settled.draw AREASTACK
+settled.info Successfully forwarded
+failed.label Failed
+failed.draw AREASTACK
+failed.info Failed forwards
+local_failed.label Local Failed
+local_failed.draw AREASTACK
+local_failed.info Locally failed forwards
+offered.label Offered
+offered.draw AREASTACK
+offered.info Currently offered/pending
+
+multigraph forwards_fees
+graph_title Forwarding Fees Earned
+graph_vlabel sats
+graph_category lightningd
+graph_info Fees earned from forwarding payments
+
+total_fees.label All Time
+total_fees.draw LINE2
+total_fees.info Total fees earned all time
+daily_fees.label Last 24h
+daily_fees.draw LINE2
+daily_fees.info Fees earned in last 24 hours
+hourly_fees.label Last Hour
+hourly_fees.draw LINE2
+hourly_fees.info Fees earned in last hour
+
+multigraph forwards_volume
+graph_title Forwarding Volume
+graph_vlabel sats
+graph_category lightningd
+graph_info Volume of payments forwarded
+
+total_volume.label All Time
+total_volume.draw LINE2
+total_volume.info Total volume forwarded all time
+daily_volume.label Last 24h
+daily_volume.draw LINE2
+daily_volume.info Volume forwarded in last 24 hours
+
+multigraph forwards_daily
+graph_title Daily Forwards (Last 24h)
+graph_vlabel count
+graph_category lightningd
+graph_info Forwards in the last 24 hours
+
+daily_total.label Total
+daily_total.draw LINE2
+daily_settled.label Settled
+daily_settled.draw AREASTACK
+daily_failed.label Failed
+daily_failed.draw AREASTACK
+
+multigraph forwards_hourly
+graph_title Hourly Forwards (Last Hour)
+graph_vlabel count
+graph_category lightningd
+graph_info Forwards in the last hour
+
+hourly_total.label Total
+hourly_total.draw LINE2
+hourly_settled.label Settled
+hourly_settled.draw LINE2
+EOF
+
+    # Per-channel config
+    echo "$CHANNEL_STATS" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read channel; do
+        if [ -n "$channel" ] && [ "$channel" != "null" ]; then
+            sid=$(echo "$channel" | sha1 | cut -c1-8 2>/dev/null || echo "$channel" | md5 | cut -c1-8 2>/dev/null || echo "$channel" | cksum | cut -d' ' -f1)
+            cat <<EOF
+
+multigraph forwards_channel_$sid
+graph_title Forwards via $channel (24h)
+graph_vlabel count
+graph_category lightningd
+graph_info Forwards through channel $channel in last 24h
+
+total_$sid.label Total
+total_$sid.draw LINE2
+settled_$sid.label Settled
+settled_$sid.draw LINE2
+EOF
+        fi
+    done
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph forwards_count
+
+total.value $total_all
+settled.value $settled_all
+failed.value $failed_all
+local_failed.value $local_failed_all
+offered.value $offered_all
+
+multigraph forwards_fees
+
+total_fees.value $fees_all_sat
+daily_fees.value $daily_fees_sat
+hourly_fees.value $hourly_fees_sat
+
+multigraph forwards_volume
+
+total_volume.value $volume_all_sat
+daily_volume.value $daily_volume_sat
+
+multigraph forwards_daily
+
+daily_total.value $daily_total
+daily_settled.value $daily_settled
+daily_failed.value $daily_failed
+
+multigraph forwards_hourly
+
+hourly_total.value $hourly_total
+hourly_settled.value $hourly_settled
+EOF
+
+# Per-channel values
+echo "$CHANNEL_STATS" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    channel=$(echo "$row" | jq -r '.[0]')
+    total=$(echo "$row" | jq -r '.[1] // 0')
+    settled=$(echo "$row" | jq -r '.[2] // 0')
+
+    if [ -n "$channel" ] && [ "$channel" != "null" ]; then
+        sid=$(echo "$channel" | sha1 | cut -c1-8 2>/dev/null || echo "$channel" | md5 | cut -c1-8 2>/dev/null || echo "$channel" | cksum | cut -d' ' -f1)
+        cat <<EOF
+
+multigraph forwards_channel_$sid
+
+total_$sid.value $total
+settled_$sid.value $settled
+EOF
+    fi
+done

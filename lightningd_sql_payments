@@ -1,0 +1,308 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_sql_payments - Plugin to monitor payments via SQL
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+sql_query() {
+    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+NOW=$(date +%s)
+DAY_AGO=$((NOW - 86400))
+WEEK_AGO=$((NOW - 604800))
+
+#
+# Queries - Outgoing payments (sendpays)
+#
+
+SENDPAYS_TOTAL=$(sql_query "SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) as complete,
+    SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) as failed,
+    COALESCE(SUM(CASE WHEN status='complete' THEN amount_msat ELSE 0 END), 0) as amount,
+    COALESCE(SUM(CASE WHEN status='complete' THEN amount_sent_msat - amount_msat ELSE 0 END), 0) as fees
+FROM sendpays")
+
+SENDPAYS_DAILY=$(sql_query "SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) as complete,
+    SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) as failed,
+    COALESCE(SUM(CASE WHEN status='complete' THEN amount_msat ELSE 0 END), 0) as amount,
+    COALESCE(SUM(CASE WHEN status='complete' THEN amount_sent_msat - amount_msat ELSE 0 END), 0) as fees
+FROM sendpays
+WHERE created_at >= $DAY_AGO")
+
+#
+# Queries - Incoming payments (invoices)
+#
+
+INVOICES_TOTAL=$(sql_query "SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN status='paid' THEN 1 ELSE 0 END) as paid,
+    SUM(CASE WHEN status='unpaid' THEN 1 ELSE 0 END) as unpaid,
+    SUM(CASE WHEN status='expired' THEN 1 ELSE 0 END) as expired,
+    COALESCE(SUM(CASE WHEN status='paid' THEN amount_received_msat ELSE 0 END), 0) as amount
+FROM invoices")
+
+INVOICES_DAILY=$(sql_query "SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN status='paid' THEN 1 ELSE 0 END) as paid,
+    COALESCE(SUM(CASE WHEN status='paid' THEN amount_received_msat ELSE 0 END), 0) as amount
+FROM invoices
+WHERE paid_at >= $DAY_AGO OR (status='unpaid' AND expires_at >= $DAY_AGO)")
+
+# Parse sendpays results
+send_total=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][0] // 0')
+send_complete=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][1] // 0')
+send_pending=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][2] // 0')
+send_failed=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][3] // 0')
+send_amount=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][4] // 0')
+send_fees=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][5] // 0')
+
+send_daily_total=$(echo "$SENDPAYS_DAILY" | jq -r '.rows[0][0] // 0')
+send_daily_complete=$(echo "$SENDPAYS_DAILY" | jq -r '.rows[0][1] // 0')
+send_daily_failed=$(echo "$SENDPAYS_DAILY" | jq -r '.rows[0][2] // 0')
+send_daily_amount=$(echo "$SENDPAYS_DAILY" | jq -r '.rows[0][3] // 0')
+send_daily_fees=$(echo "$SENDPAYS_DAILY" | jq -r '.rows[0][4] // 0')
+
+# Parse invoices results
+inv_total=$(echo "$INVOICES_TOTAL" | jq -r '.rows[0][0] // 0')
+inv_paid=$(echo "$INVOICES_TOTAL" | jq -r '.rows[0][1] // 0')
+inv_unpaid=$(echo "$INVOICES_TOTAL" | jq -r '.rows[0][2] // 0')
+inv_expired=$(echo "$INVOICES_TOTAL" | jq -r '.rows[0][3] // 0')
+inv_amount=$(echo "$INVOICES_TOTAL" | jq -r '.rows[0][4] // 0')
+
+inv_daily_paid=$(echo "$INVOICES_DAILY" | jq -r '.rows[0][1] // 0')
+inv_daily_amount=$(echo "$INVOICES_DAILY" | jq -r '.rows[0][2] // 0')
+
+# Convert to sats
+send_amount_sat=$((send_amount / 1000))
+send_fees_sat=$((send_fees / 1000))
+send_daily_amount_sat=$((send_daily_amount / 1000))
+send_daily_fees_sat=$((send_daily_fees / 1000))
+inv_amount_sat=$((inv_amount / 1000))
+inv_daily_amount_sat=$((inv_daily_amount / 1000))
+
+# Calculate success rates
+if [ "$send_total" -gt 0 ]; then
+    send_success_rate=$((send_complete * 100 / send_total))
+else
+    send_success_rate=0
+fi
+
+if [ "$inv_total" -gt 0 ]; then
+    inv_success_rate=$((inv_paid * 100 / inv_total))
+else
+    inv_success_rate=0
+fi
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph sendpays_count
+graph_title Outgoing Payments (All Time)
+graph_vlabel count
+graph_category lightningd
+graph_info Outgoing payment attempts
+
+total.label Total
+total.draw LINE2
+complete.label Complete
+complete.draw AREASTACK
+complete.colour 00AA00
+pending.label Pending
+pending.draw AREASTACK
+pending.colour FFAA00
+failed.label Failed
+failed.draw AREASTACK
+failed.colour AA0000
+
+multigraph sendpays_daily
+graph_title Outgoing Payments (Last 24h)
+graph_vlabel count
+graph_category lightningd
+graph_info Outgoing payments in last 24 hours
+
+daily_total.label Total
+daily_total.draw LINE2
+daily_complete.label Complete
+daily_complete.draw AREASTACK
+daily_complete.colour 00AA00
+daily_failed.label Failed
+daily_failed.draw AREASTACK
+daily_failed.colour AA0000
+
+multigraph sendpays_amount
+graph_title Outgoing Payment Volume
+graph_vlabel sats
+graph_category lightningd
+graph_info Volume of outgoing payments
+
+amount.label All Time
+amount.draw LINE2
+daily_amount.label Last 24h
+daily_amount.draw LINE2
+
+multigraph sendpays_fees
+graph_title Outgoing Payment Fees Paid
+graph_vlabel sats
+graph_category lightningd
+graph_info Fees paid for outgoing payments
+
+fees.label All Time
+fees.draw LINE2
+daily_fees.label Last 24h
+daily_fees.draw LINE2
+
+multigraph invoices_count
+graph_title Incoming Invoices (All Time)
+graph_vlabel count
+graph_category lightningd
+graph_info Invoice status
+
+total.label Total
+total.draw LINE2
+paid.label Paid
+paid.draw AREASTACK
+paid.colour 00AA00
+unpaid.label Unpaid
+unpaid.draw AREASTACK
+unpaid.colour FFAA00
+expired.label Expired
+expired.draw AREASTACK
+expired.colour AA0000
+
+multigraph invoices_daily
+graph_title Incoming Invoices (Last 24h)
+graph_vlabel count
+graph_category lightningd
+graph_info Invoices paid in last 24 hours
+
+daily_paid.label Paid
+daily_paid.draw LINE2
+
+multigraph invoices_amount
+graph_title Incoming Payment Volume
+graph_vlabel sats
+graph_category lightningd
+graph_info Volume of incoming payments
+
+amount.label All Time
+amount.draw LINE2
+daily_amount.label Last 24h
+daily_amount.draw LINE2
+
+multigraph payments_success_rate
+graph_title Payment Success Rates
+graph_vlabel percent
+graph_category lightningd
+graph_info Success rate of payments
+graph_args --lower-limit 0 --upper-limit 100
+
+send_rate.label Outgoing
+send_rate.draw LINE2
+send_rate.colour 0000AA
+inv_rate.label Incoming
+inv_rate.draw LINE2
+inv_rate.colour 00AA00
+EOF
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph sendpays_count
+
+total.value $send_total
+complete.value $send_complete
+pending.value $send_pending
+failed.value $send_failed
+
+multigraph sendpays_daily
+
+daily_total.value $send_daily_total
+daily_complete.value $send_daily_complete
+daily_failed.value $send_daily_failed
+
+multigraph sendpays_amount
+
+amount.value $send_amount_sat
+daily_amount.value $send_daily_amount_sat
+
+multigraph sendpays_fees
+
+fees.value $send_fees_sat
+daily_fees.value $send_daily_fees_sat
+
+multigraph invoices_count
+
+total.value $inv_total
+paid.value $inv_paid
+unpaid.value $inv_unpaid
+expired.value $inv_expired
+
+multigraph invoices_daily
+
+daily_paid.value $inv_daily_paid
+
+multigraph invoices_amount
+
+amount.value $inv_amount_sat
+daily_amount.value $inv_daily_amount_sat
+
+multigraph payments_success_rate
+
+send_rate.value $send_success_rate
+inv_rate.value $inv_success_rate
+EOF

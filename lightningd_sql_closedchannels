@@ -1,0 +1,355 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_sql_closedchannels - Plugin to monitor closed channels via SQL
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+sql_query() {
+    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+#
+# Queries
+#
+
+# Total closed channels
+CLOSED_TOTAL=$(sql_query "SELECT COUNT(*) FROM closedchannels")
+
+# Closed by cause
+CLOSED_BY_CAUSE=$(sql_query "SELECT
+    close_cause,
+    COUNT(*) as count
+FROM closedchannels
+GROUP BY close_cause
+ORDER BY count DESC")
+
+# Closed by opener
+CLOSED_BY_OPENER=$(sql_query "SELECT
+    opener,
+    COUNT(*) as count
+FROM closedchannels
+GROUP BY opener")
+
+# Closed by closer
+CLOSED_BY_CLOSER=$(sql_query "SELECT
+    closer,
+    COUNT(*) as count
+FROM closedchannels
+GROUP BY closer")
+
+# P&L analysis
+PNL_STATS=$(sql_query "SELECT
+    COALESCE(SUM(total_msat), 0) as total_capacity,
+    COALESCE(SUM(final_to_us_msat), 0) as final_to_us,
+    COALESCE(SUM(funding_pushed_msat), 0) as pushed,
+    COALESCE(SUM(funding_fee_paid_msat), 0) as fees_paid,
+    COALESCE(SUM(funding_fee_rcvd_msat), 0) as fees_rcvd,
+    COUNT(*) as count
+FROM closedchannels")
+
+# HTLC stats from closed channels
+HTLC_STATS=$(sql_query "SELECT
+    COALESCE(SUM(total_htlcs_sent), 0) as total_htlcs,
+    COALESCE(AVG(total_htlcs_sent), 0) as avg_htlcs,
+    COALESCE(SUM(total_local_commitments), 0) as local_commits,
+    COALESCE(SUM(total_remote_commitments), 0) as remote_commits
+FROM closedchannels")
+
+# Private vs public
+PRIVATE_STATS=$(sql_query "SELECT
+    private,
+    COUNT(*) as count
+FROM closedchannels
+GROUP BY private")
+
+# Leased channels
+LEASED_STATS=$(sql_query "SELECT
+    leased,
+    COUNT(*) as count
+FROM closedchannels
+GROUP BY leased")
+
+# Parse results
+total_closed=$(echo "$CLOSED_TOTAL" | jq -r '.rows[0][0] // 0')
+
+# P&L
+total_capacity=$(echo "$PNL_STATS" | jq -r '.rows[0][0] // 0')
+final_to_us=$(echo "$PNL_STATS" | jq -r '.rows[0][1] // 0')
+pushed=$(echo "$PNL_STATS" | jq -r '.rows[0][2] // 0')
+fees_paid=$(echo "$PNL_STATS" | jq -r '.rows[0][3] // 0')
+fees_rcvd=$(echo "$PNL_STATS" | jq -r '.rows[0][4] // 0')
+
+# Convert to sats
+total_capacity_sat=$((total_capacity / 1000))
+final_to_us_sat=$((final_to_us / 1000))
+pushed_sat=$((pushed / 1000))
+fees_paid_sat=$((fees_paid / 1000))
+fees_rcvd_sat=$((fees_rcvd / 1000))
+net_fees_sat=$((fees_rcvd_sat - fees_paid_sat))
+
+# HTLC stats
+total_htlcs=$(echo "$HTLC_STATS" | jq -r '.rows[0][0] // 0')
+avg_htlcs=$(echo "$HTLC_STATS" | jq -r '.rows[0][1] // 0' | cut -d. -f1)
+local_commits=$(echo "$HTLC_STATS" | jq -r '.rows[0][2] // 0')
+remote_commits=$(echo "$HTLC_STATS" | jq -r '.rows[0][3] // 0')
+
+# Private/public
+private_count=$(echo "$PRIVATE_STATS" | jq -r '.rows[] | select(.[0] == 1) | .[1] // 0' 2>/dev/null | head -1)
+public_count=$(echo "$PRIVATE_STATS" | jq -r '.rows[] | select(.[0] == 0) | .[1] // 0' 2>/dev/null | head -1)
+private_count=${private_count:-0}
+public_count=${public_count:-0}
+
+# Leased
+leased_count=$(echo "$LEASED_STATS" | jq -r '.rows[] | select(.[0] == 1) | .[1] // 0' 2>/dev/null | head -1)
+not_leased_count=$(echo "$LEASED_STATS" | jq -r '.rows[] | select(.[0] == 0) | .[1] // 0' 2>/dev/null | head -1)
+leased_count=${leased_count:-0}
+not_leased_count=${not_leased_count:-0}
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph closed_total
+graph_title Closed Channels Total
+graph_vlabel count
+graph_category lightningd
+graph_info Total number of closed channels
+
+total.label Total Closed
+total.draw LINE2
+
+multigraph closed_by_cause
+graph_title Closed Channels by Cause
+graph_vlabel count
+graph_category lightningd
+graph_info Reason why channels were closed
+
+EOF
+
+    # Dynamic causes
+    echo "$CLOSED_BY_CAUSE" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read cause; do
+        if [ -n "$cause" ] && [ "$cause" != "null" ]; then
+            safe_cause=$(echo "$cause" | tr -cd 'a-zA-Z0-9_')
+            echo "cause_${safe_cause}.label $cause"
+            echo "cause_${safe_cause}.draw AREASTACK"
+        fi
+    done
+
+    cat <<EOF
+
+multigraph closed_by_opener
+graph_title Closed Channels by Opener
+graph_vlabel count
+graph_category lightningd
+graph_info Who opened the closed channels
+
+EOF
+
+    echo "$CLOSED_BY_OPENER" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read opener; do
+        if [ -n "$opener" ] && [ "$opener" != "null" ]; then
+            safe_opener=$(echo "$opener" | tr -cd 'a-zA-Z0-9_')
+            echo "opener_${safe_opener}.label $opener"
+            echo "opener_${safe_opener}.draw AREASTACK"
+        fi
+    done
+
+    cat <<EOF
+
+multigraph closed_by_closer
+graph_title Closed Channels by Closer
+graph_vlabel count
+graph_category lightningd
+graph_info Who closed the channels
+
+EOF
+
+    echo "$CLOSED_BY_CLOSER" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read closer; do
+        if [ -n "$closer" ] && [ "$closer" != "null" ]; then
+            safe_closer=$(echo "$closer" | tr -cd 'a-zA-Z0-9_')
+            echo "closer_${safe_closer}.label $closer"
+            echo "closer_${safe_closer}.draw AREASTACK"
+        fi
+    done
+
+    cat <<EOF
+
+multigraph closed_pnl
+graph_title Closed Channels P&L
+graph_vlabel sats
+graph_category lightningd
+graph_info Profit and loss from closed channels
+
+capacity.label Total Capacity
+capacity.draw LINE2
+final_to_us.label Final Balance (Ours)
+final_to_us.draw LINE2
+pushed.label Pushed Amount
+pushed.draw LINE1
+net_fees.label Net Fees (rcvd - paid)
+net_fees.draw LINE2
+
+multigraph closed_htlcs
+graph_title Closed Channels HTLC Stats
+graph_vlabel count
+graph_category lightningd
+graph_info HTLC and commitment activity in closed channels
+
+total_htlcs.label Total HTLCs Sent
+total_htlcs.draw LINE2
+local_commits.label Local Commitments
+local_commits.draw LINE1
+remote_commits.label Remote Commitments
+remote_commits.draw LINE1
+
+multigraph closed_visibility
+graph_title Closed Channels Visibility
+graph_vlabel count
+graph_category lightningd
+graph_info Private vs public closed channels
+
+public.label Public
+public.draw AREASTACK
+public.colour 00AA00
+private.label Private
+private.draw AREASTACK
+private.colour 0000AA
+
+multigraph closed_leased
+graph_title Closed Channels Leased
+graph_vlabel count
+graph_category lightningd
+graph_info Leased vs regular closed channels
+
+not_leased.label Regular
+not_leased.draw AREASTACK
+leased.label Leased
+leased.draw AREASTACK
+EOF
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph closed_total
+
+total.value $total_closed
+
+multigraph closed_by_cause
+
+EOF
+
+echo "$CLOSED_BY_CAUSE" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    cause=$(echo "$row" | jq -r '.[0]')
+    count=$(echo "$row" | jq -r '.[1] // 0')
+
+    if [ -n "$cause" ] && [ "$cause" != "null" ]; then
+        safe_cause=$(echo "$cause" | tr -cd 'a-zA-Z0-9_')
+        echo "cause_${safe_cause}.value $count"
+    fi
+done
+
+cat <<EOF
+
+multigraph closed_by_opener
+
+EOF
+
+echo "$CLOSED_BY_OPENER" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    opener=$(echo "$row" | jq -r '.[0]')
+    count=$(echo "$row" | jq -r '.[1] // 0')
+
+    if [ -n "$opener" ] && [ "$opener" != "null" ]; then
+        safe_opener=$(echo "$opener" | tr -cd 'a-zA-Z0-9_')
+        echo "opener_${safe_opener}.value $count"
+    fi
+done
+
+cat <<EOF
+
+multigraph closed_by_closer
+
+EOF
+
+echo "$CLOSED_BY_CLOSER" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    closer=$(echo "$row" | jq -r '.[0]')
+    count=$(echo "$row" | jq -r '.[1] // 0')
+
+    if [ -n "$closer" ] && [ "$closer" != "null" ]; then
+        safe_closer=$(echo "$closer" | tr -cd 'a-zA-Z0-9_')
+        echo "closer_${safe_closer}.value $count"
+    fi
+done
+
+cat <<EOF
+
+multigraph closed_pnl
+
+capacity.value $total_capacity_sat
+final_to_us.value $final_to_us_sat
+pushed.value $pushed_sat
+net_fees.value $net_fees_sat
+
+multigraph closed_htlcs
+
+total_htlcs.value $total_htlcs
+local_commits.value $local_commits
+remote_commits.value $remote_commits
+
+multigraph closed_visibility
+
+public.value $public_count
+private.value $private_count
+
+multigraph closed_leased
+
+not_leased.value $not_leased_count
+leased.value $leased_count
+EOF

@@ -1,0 +1,240 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_sql_channels_balance - Plugin to monitor channel balances via SQL
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+sql_query() {
+    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+#
+# Queries
+#
+
+# Global balance stats
+GLOBAL_STATS=$(sql_query "SELECT
+    COALESCE(SUM(to_us_msat), 0) as our_total,
+    COALESCE(SUM(total_msat - to_us_msat), 0) as their_total,
+    COALESCE(SUM(total_msat), 0) as capacity_total,
+    COALESCE(SUM(spendable_msat), 0) as spendable_total,
+    COALESCE(SUM(receivable_msat), 0) as receivable_total,
+    COUNT(*) as channel_count
+FROM peerchannels
+WHERE state = 'CHANNELD_NORMAL'")
+
+# Per-channel balances
+CHANNEL_BALANCES=$(sql_query "SELECT
+    short_channel_id,
+    to_us_msat,
+    total_msat - to_us_msat as to_them_msat,
+    total_msat,
+    spendable_msat,
+    receivable_msat,
+    peer_connected
+FROM peerchannels
+WHERE state = 'CHANNELD_NORMAL' AND short_channel_id IS NOT NULL
+ORDER BY total_msat DESC")
+
+# Balance distribution (how balanced are channels)
+BALANCE_DIST=$(sql_query "SELECT
+    CASE
+        WHEN total_msat = 0 THEN 0
+        ELSE CAST(to_us_msat * 100 / total_msat AS INTEGER)
+    END as our_pct,
+    COUNT(*) as count
+FROM peerchannels
+WHERE state = 'CHANNELD_NORMAL'
+GROUP BY our_pct
+ORDER BY our_pct")
+
+# Parse global results
+our_total=$(echo "$GLOBAL_STATS" | jq -r '.rows[0][0] // 0')
+their_total=$(echo "$GLOBAL_STATS" | jq -r '.rows[0][1] // 0')
+capacity_total=$(echo "$GLOBAL_STATS" | jq -r '.rows[0][2] // 0')
+spendable_total=$(echo "$GLOBAL_STATS" | jq -r '.rows[0][3] // 0')
+receivable_total=$(echo "$GLOBAL_STATS" | jq -r '.rows[0][4] // 0')
+channel_count=$(echo "$GLOBAL_STATS" | jq -r '.rows[0][5] // 0')
+
+# Convert to sats
+our_total_sat=$((our_total / 1000))
+their_total_sat=$((their_total / 1000))
+capacity_total_sat=$((capacity_total / 1000))
+spendable_total_sat=$((spendable_total / 1000))
+receivable_total_sat=$((receivable_total / 1000))
+
+# Calculate balance ratio (0-100, 50 = perfectly balanced)
+if [ "$capacity_total" -gt 0 ]; then
+    balance_ratio=$((our_total * 100 / capacity_total))
+else
+    balance_ratio=0
+fi
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph channels_balance_global
+graph_title Global Channel Balance
+graph_vlabel sats
+graph_category lightningd
+graph_info Total balance across all channels
+
+our.label Our Balance
+our.draw AREASTACK
+our.colour 00AA00
+their.label Their Balance
+their.draw AREASTACK
+their.colour 0000AA
+capacity.label Total Capacity
+capacity.draw LINE2
+capacity.colour 000000
+
+multigraph channels_liquidity
+graph_title Channel Liquidity
+graph_vlabel sats
+graph_category lightningd
+graph_info Spendable and receivable liquidity
+
+spendable.label Spendable (Outbound)
+spendable.draw AREA
+spendable.colour 00AA00
+receivable.label Receivable (Inbound)
+receivable.draw AREA
+receivable.colour 0000AA
+
+multigraph channels_balance_ratio
+graph_title Balance Ratio
+graph_vlabel percent
+graph_category lightningd
+graph_info Percentage of total capacity on our side (50% = balanced)
+graph_args --lower-limit 0 --upper-limit 100
+
+ratio.label Our Side %
+ratio.draw LINE2
+ratio.warning 30:70
+ratio.critical 20:80
+
+multigraph channels_count
+graph_title Active Channels
+graph_vlabel count
+graph_category lightningd
+graph_info Number of active channels
+
+count.label Channels
+count.draw LINE2
+EOF
+
+    # Per-channel config
+    echo "$CHANNEL_BALANCES" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read scid; do
+        if [ -n "$scid" ] && [ "$scid" != "null" ]; then
+            sid=$(echo "$scid" | sha1 | cut -c1-8 2>/dev/null || echo "$scid" | md5 | cut -c1-8 2>/dev/null || echo "$scid" | cksum | cut -d' ' -f1)
+            cat <<EOF
+
+multigraph channels_balance_$sid
+graph_title Balance: $scid
+graph_vlabel sats
+graph_category lightningd
+graph_info Balance distribution for channel $scid
+
+our_$sid.label Our Balance
+our_$sid.draw AREASTACK
+our_$sid.colour 00AA00
+their_$sid.label Their Balance
+their_$sid.draw AREASTACK
+their_$sid.colour 0000AA
+EOF
+        fi
+    done
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph channels_balance_global
+
+our.value $our_total_sat
+their.value $their_total_sat
+capacity.value $capacity_total_sat
+
+multigraph channels_liquidity
+
+spendable.value $spendable_total_sat
+receivable.value $receivable_total_sat
+
+multigraph channels_balance_ratio
+
+ratio.value $balance_ratio
+
+multigraph channels_count
+
+count.value $channel_count
+EOF
+
+# Per-channel values
+echo "$CHANNEL_BALANCES" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    scid=$(echo "$row" | jq -r '.[0]')
+    our_msat=$(echo "$row" | jq -r '.[1] // 0')
+    their_msat=$(echo "$row" | jq -r '.[2] // 0')
+
+    if [ -n "$scid" ] && [ "$scid" != "null" ]; then
+        sid=$(echo "$scid" | sha1 | cut -c1-8 2>/dev/null || echo "$scid" | md5 | cut -c1-8 2>/dev/null || echo "$scid" | cksum | cut -d' ' -f1)
+        our_sat=$((our_msat / 1000))
+        their_sat=$((their_msat / 1000))
+        cat <<EOF
+
+multigraph channels_balance_$sid
+
+our_$sid.value $our_sat
+their_$sid.value $their_sat
+EOF
+    fi
+done

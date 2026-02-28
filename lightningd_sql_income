@@ -1,0 +1,302 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_sql_income - Plugin to monitor income via bookkeeper SQL
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+sql_query() {
+    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+NOW=$(date +%s)
+DAY_AGO=$((NOW - 86400))
+WEEK_AGO=$((NOW - 604800))
+MONTH_AGO=$((NOW - 2592000))
+
+#
+# Queries
+#
+
+# Total income by tag (all time)
+INCOME_BY_TAG=$(sql_query "SELECT
+    tag,
+    COALESCE(SUM(credit_msat), 0) as credit,
+    COALESCE(SUM(debit_msat), 0) as debit
+FROM bkpr_income
+GROUP BY tag")
+
+# Income summary (all time)
+INCOME_TOTAL=$(sql_query "SELECT
+    COALESCE(SUM(credit_msat), 0) as total_credit,
+    COALESCE(SUM(debit_msat), 0) as total_debit
+FROM bkpr_income")
+
+# Daily income
+INCOME_DAILY=$(sql_query "SELECT
+    COALESCE(SUM(credit_msat), 0) as credit,
+    COALESCE(SUM(debit_msat), 0) as debit
+FROM bkpr_income
+WHERE timestamp >= $DAY_AGO")
+
+# Weekly income
+INCOME_WEEKLY=$(sql_query "SELECT
+    COALESCE(SUM(credit_msat), 0) as credit,
+    COALESCE(SUM(debit_msat), 0) as debit
+FROM bkpr_income
+WHERE timestamp >= $WEEK_AGO")
+
+# Monthly income
+INCOME_MONTHLY=$(sql_query "SELECT
+    COALESCE(SUM(credit_msat), 0) as credit,
+    COALESCE(SUM(debit_msat), 0) as debit
+FROM bkpr_income
+WHERE timestamp >= $MONTH_AGO")
+
+# Routing fees specifically (routed tag)
+ROUTING_FEES=$(sql_query "SELECT
+    COALESCE(SUM(credit_msat), 0) as credit
+FROM bkpr_income
+WHERE tag = 'routed'")
+
+ROUTING_FEES_DAILY=$(sql_query "SELECT
+    COALESCE(SUM(credit_msat), 0) as credit
+FROM bkpr_income
+WHERE tag = 'routed' AND timestamp >= $DAY_AGO")
+
+# Account events summary
+ACCOUNT_EVENTS=$(sql_query "SELECT
+    type,
+    COUNT(*) as count,
+    COALESCE(SUM(credit_msat), 0) as credit,
+    COALESCE(SUM(debit_msat), 0) as debit
+FROM bkpr_accountevents
+GROUP BY type")
+
+# Parse results
+total_credit=$(echo "$INCOME_TOTAL" | jq -r '.rows[0][0] // 0')
+total_debit=$(echo "$INCOME_TOTAL" | jq -r '.rows[0][1] // 0')
+
+daily_credit=$(echo "$INCOME_DAILY" | jq -r '.rows[0][0] // 0')
+daily_debit=$(echo "$INCOME_DAILY" | jq -r '.rows[0][1] // 0')
+
+weekly_credit=$(echo "$INCOME_WEEKLY" | jq -r '.rows[0][0] // 0')
+weekly_debit=$(echo "$INCOME_WEEKLY" | jq -r '.rows[0][1] // 0')
+
+monthly_credit=$(echo "$INCOME_MONTHLY" | jq -r '.rows[0][0] // 0')
+monthly_debit=$(echo "$INCOME_MONTHLY" | jq -r '.rows[0][1] // 0')
+
+routing_total=$(echo "$ROUTING_FEES" | jq -r '.rows[0][0] // 0')
+routing_daily=$(echo "$ROUTING_FEES_DAILY" | jq -r '.rows[0][0] // 0')
+
+# Convert to sats
+total_credit_sat=$((total_credit / 1000))
+total_debit_sat=$((total_debit / 1000))
+net_total_sat=$((total_credit_sat - total_debit_sat))
+
+daily_credit_sat=$((daily_credit / 1000))
+daily_debit_sat=$((daily_debit / 1000))
+net_daily_sat=$((daily_credit_sat - daily_debit_sat))
+
+weekly_credit_sat=$((weekly_credit / 1000))
+weekly_debit_sat=$((weekly_debit / 1000))
+net_weekly_sat=$((weekly_credit_sat - weekly_debit_sat))
+
+monthly_credit_sat=$((monthly_credit / 1000))
+monthly_debit_sat=$((monthly_debit / 1000))
+net_monthly_sat=$((monthly_credit_sat - monthly_debit_sat))
+
+routing_total_sat=$((routing_total / 1000))
+routing_daily_sat=$((routing_daily / 1000))
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph income_total
+graph_title Total Income (All Time)
+graph_vlabel sats
+graph_category lightningd
+graph_info Total income and expenses
+
+credit.label Credit (Income)
+credit.draw AREA
+credit.colour 00AA00
+debit.label Debit (Expenses)
+debit.draw AREA
+debit.colour AA0000
+net.label Net
+net.draw LINE2
+net.colour 000000
+
+multigraph income_daily
+graph_title Daily Income (Last 24h)
+graph_vlabel sats
+graph_category lightningd
+graph_info Income and expenses in the last 24 hours
+
+daily_credit.label Credit
+daily_credit.draw AREA
+daily_credit.colour 00AA00
+daily_debit.label Debit
+daily_debit.draw AREA
+daily_debit.colour AA0000
+daily_net.label Net
+daily_net.draw LINE2
+daily_net.colour 000000
+
+multigraph income_weekly
+graph_title Weekly Income (Last 7 days)
+graph_vlabel sats
+graph_category lightningd
+graph_info Income and expenses in the last 7 days
+
+weekly_credit.label Credit
+weekly_credit.draw AREA
+weekly_credit.colour 00AA00
+weekly_debit.label Debit
+weekly_debit.draw AREA
+weekly_debit.colour AA0000
+weekly_net.label Net
+weekly_net.draw LINE2
+weekly_net.colour 000000
+
+multigraph income_monthly
+graph_title Monthly Income (Last 30 days)
+graph_vlabel sats
+graph_category lightningd
+graph_info Income and expenses in the last 30 days
+
+monthly_credit.label Credit
+monthly_credit.draw AREA
+monthly_credit.colour 00AA00
+monthly_debit.label Debit
+monthly_debit.draw AREA
+monthly_debit.colour AA0000
+monthly_net.label Net
+monthly_net.draw LINE2
+monthly_net.colour 000000
+
+multigraph routing_fees
+graph_title Routing Fees
+graph_vlabel sats
+graph_category lightningd
+graph_info Fees earned from routing payments
+
+routing_total.label All Time
+routing_total.draw LINE2
+routing_daily.label Last 24h
+routing_daily.draw LINE2
+
+multigraph income_by_tag
+graph_title Income by Category
+graph_vlabel sats
+graph_category lightningd
+graph_info Income breakdown by tag/category
+
+EOF
+
+    # Dynamic tags from income
+    echo "$INCOME_BY_TAG" | jq -r '.rows[]? | .[0]' 2>/dev/null | sort -u | while read tag; do
+        if [ -n "$tag" ] && [ "$tag" != "null" ]; then
+            safe_tag=$(echo "$tag" | tr -cd 'a-zA-Z0-9_')
+            echo "tag_${safe_tag}_credit.label ${tag} (credit)"
+            echo "tag_${safe_tag}_credit.draw AREASTACK"
+        fi
+    done
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph income_total
+
+credit.value $total_credit_sat
+debit.value $total_debit_sat
+net.value $net_total_sat
+
+multigraph income_daily
+
+daily_credit.value $daily_credit_sat
+daily_debit.value $daily_debit_sat
+daily_net.value $net_daily_sat
+
+multigraph income_weekly
+
+weekly_credit.value $weekly_credit_sat
+weekly_debit.value $weekly_debit_sat
+weekly_net.value $net_weekly_sat
+
+multigraph income_monthly
+
+monthly_credit.value $monthly_credit_sat
+monthly_debit.value $monthly_debit_sat
+monthly_net.value $net_monthly_sat
+
+multigraph routing_fees
+
+routing_total.value $routing_total_sat
+routing_daily.value $routing_daily_sat
+
+multigraph income_by_tag
+
+EOF
+
+# Per-tag values
+echo "$INCOME_BY_TAG" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    tag=$(echo "$row" | jq -r '.[0]')
+    credit=$(echo "$row" | jq -r '.[1] // 0')
+
+    if [ -n "$tag" ] && [ "$tag" != "null" ]; then
+        safe_tag=$(echo "$tag" | tr -cd 'a-zA-Z0-9_')
+        credit_sat=$((credit / 1000))
+        echo "tag_${safe_tag}_credit.value $credit_sat"
+    fi
+done

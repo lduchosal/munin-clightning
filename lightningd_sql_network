@@ -1,0 +1,288 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+lightningd_sql_network - Plugin to monitor network events via SQL
+
+=head1 CONFIGURATION
+
+ [lightningd_*]
+    user bitcoin
+    env.binary lightning-cli
+    env.data_dir /var/db/c-lightning
+
+=head1 AUTHOR
+
+Luc Duchosal
+
+=head1 LICENSE
+
+AGPLv3+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
+DATA_DIR=${data_dir:-"/var/db/c-lightning"}
+
+if [ ! -x "$BINARY" ]; then
+    BINARY=$(which lightning-cli 2>/dev/null || echo "/usr/local/bin/lightning-cli")
+fi
+
+sql_query() {
+    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+}
+
+if [ "$1" = "autoconf" ]; then
+    if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+NOW=$(date +%s)
+DAY_AGO=$((NOW - 86400))
+HOUR_AGO=$((NOW - 3600))
+
+#
+# Queries
+#
+
+# Network events by type (all time)
+EVENTS_BY_TYPE=$(sql_query "SELECT
+    type,
+    COUNT(*) as count
+FROM networkevents
+GROUP BY type")
+
+# Network events last 24h
+EVENTS_DAILY=$(sql_query "SELECT
+    type,
+    COUNT(*) as count
+FROM networkevents
+WHERE timestamp >= $DAY_AGO
+GROUP BY type")
+
+# Network events last hour
+EVENTS_HOURLY=$(sql_query "SELECT
+    type,
+    COUNT(*) as count
+FROM networkevents
+WHERE timestamp >= $HOUR_AGO
+GROUP BY type")
+
+# Connection duration stats
+DURATION_STATS=$(sql_query "SELECT
+    type,
+    AVG(duration_nsec) / 1000000000 as avg_duration_sec,
+    MIN(duration_nsec) / 1000000000 as min_duration_sec,
+    MAX(duration_nsec) / 1000000000 as max_duration_sec
+FROM networkevents
+WHERE duration_nsec IS NOT NULL
+GROUP BY type")
+
+# Disconnection reasons
+DISCONNECT_REASONS=$(sql_query "SELECT
+    reason,
+    COUNT(*) as count
+FROM networkevents
+WHERE type = 'disconnected' AND timestamp >= $DAY_AGO
+GROUP BY reason
+ORDER BY count DESC
+LIMIT 10")
+
+# Current peers
+PEERS_STATUS=$(sql_query "SELECT
+    SUM(CASE WHEN connected = 1 THEN 1 ELSE 0 END) as connected,
+    SUM(CASE WHEN connected = 0 THEN 1 ELSE 0 END) as disconnected,
+    COUNT(*) as total
+FROM peers")
+
+# Parse results
+connected=$(echo "$PEERS_STATUS" | jq -r '.rows[0][0] // 0')
+disconnected=$(echo "$PEERS_STATUS" | jq -r '.rows[0][1] // 0')
+total_peers=$(echo "$PEERS_STATUS" | jq -r '.rows[0][2] // 0')
+
+# Parse daily events
+daily_connected=$(echo "$EVENTS_DAILY" | jq -r '.rows[] | select(.[0] == "connected") | .[1] // 0' 2>/dev/null | head -1)
+daily_disconnected=$(echo "$EVENTS_DAILY" | jq -r '.rows[] | select(.[0] == "disconnected") | .[1] // 0' 2>/dev/null | head -1)
+daily_connected=${daily_connected:-0}
+daily_disconnected=${daily_disconnected:-0}
+
+# Parse hourly events
+hourly_connected=$(echo "$EVENTS_HOURLY" | jq -r '.rows[] | select(.[0] == "connected") | .[1] // 0' 2>/dev/null | head -1)
+hourly_disconnected=$(echo "$EVENTS_HOURLY" | jq -r '.rows[] | select(.[0] == "disconnected") | .[1] // 0' 2>/dev/null | head -1)
+hourly_connected=${hourly_connected:-0}
+hourly_disconnected=${hourly_disconnected:-0}
+
+# Connection ratio
+if [ "$total_peers" -gt 0 ]; then
+    peer_ratio=$((connected * 100 / total_peers))
+else
+    peer_ratio=0
+fi
+
+#
+# Config
+#
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+multigraph peers_status
+graph_title Peer Connection Status
+graph_vlabel count
+graph_category lightningd
+graph_info Current peer connection status
+
+connected.label Connected
+connected.draw AREASTACK
+connected.colour 00AA00
+disconnected.label Disconnected
+disconnected.draw AREASTACK
+disconnected.colour AA0000
+total.label Total
+total.draw LINE2
+
+multigraph peers_ratio
+graph_title Peer Connection Ratio
+graph_vlabel percent
+graph_category lightningd
+graph_info Percentage of peers connected
+graph_args --lower-limit 0 --upper-limit 100
+
+ratio.label Connected %
+ratio.draw LINE2
+ratio.warning 70:
+ratio.critical 50:
+
+multigraph network_events_daily
+graph_title Network Events (Last 24h)
+graph_vlabel count
+graph_category lightningd
+graph_info Connection and disconnection events in last 24h
+
+daily_connected.label Connections
+daily_connected.draw LINE2
+daily_connected.colour 00AA00
+daily_disconnected.label Disconnections
+daily_disconnected.draw LINE2
+daily_disconnected.colour AA0000
+
+multigraph network_events_hourly
+graph_title Network Events (Last Hour)
+graph_vlabel count
+graph_category lightningd
+graph_info Connection and disconnection events in last hour
+
+hourly_connected.label Connections
+hourly_connected.draw LINE2
+hourly_connected.colour 00AA00
+hourly_disconnected.label Disconnections
+hourly_disconnected.draw LINE2
+hourly_disconnected.colour AA0000
+
+multigraph network_events_types
+graph_title Network Event Types (All Time)
+graph_vlabel count
+graph_category lightningd
+graph_info All network events by type
+
+EOF
+
+    # Dynamic event types
+    echo "$EVENTS_BY_TYPE" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read evtype; do
+        if [ -n "$evtype" ] && [ "$evtype" != "null" ]; then
+            safe_type=$(echo "$evtype" | tr -cd 'a-zA-Z0-9_')
+            echo "type_${safe_type}.label $evtype"
+            echo "type_${safe_type}.draw AREASTACK"
+        fi
+    done
+
+    cat <<EOF
+
+multigraph disconnect_reasons
+graph_title Disconnection Reasons (Last 24h)
+graph_vlabel count
+graph_category lightningd
+graph_info Why peers disconnected
+
+EOF
+
+    # Dynamic disconnect reasons
+    echo "$DISCONNECT_REASONS" | jq -r '.rows[]? | .[0]' 2>/dev/null | while read reason; do
+        if [ -n "$reason" ] && [ "$reason" != "null" ]; then
+            safe_reason=$(echo "$reason" | tr -cd 'a-zA-Z0-9_' | cut -c1-20)
+            echo "reason_${safe_reason}.label $reason"
+            echo "reason_${safe_reason}.draw AREASTACK"
+        fi
+    done
+
+    exit 0
+fi
+
+#
+# Values
+#
+
+cat <<EOF
+multigraph peers_status
+
+connected.value $connected
+disconnected.value $disconnected
+total.value $total_peers
+
+multigraph peers_ratio
+
+ratio.value $peer_ratio
+
+multigraph network_events_daily
+
+daily_connected.value $daily_connected
+daily_disconnected.value $daily_disconnected
+
+multigraph network_events_hourly
+
+hourly_connected.value $hourly_connected
+hourly_disconnected.value $hourly_disconnected
+
+multigraph network_events_types
+
+EOF
+
+# Per-type values
+echo "$EVENTS_BY_TYPE" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    evtype=$(echo "$row" | jq -r '.[0]')
+    count=$(echo "$row" | jq -r '.[1] // 0')
+
+    if [ -n "$evtype" ] && [ "$evtype" != "null" ]; then
+        safe_type=$(echo "$evtype" | tr -cd 'a-zA-Z0-9_')
+        echo "type_${safe_type}.value $count"
+    fi
+done
+
+cat <<EOF
+
+multigraph disconnect_reasons
+
+EOF
+
+# Per-reason values
+echo "$DISCONNECT_REASONS" | jq -c '.rows[]?' 2>/dev/null | while read row; do
+    reason=$(echo "$row" | jq -r '.[0]')
+    count=$(echo "$row" | jq -r '.[1] // 0')
+
+    if [ -n "$reason" ] && [ "$reason" != "null" ]; then
+        safe_reason=$(echo "$reason" | tr -cd 'a-zA-Z0-9_' | cut -c1-20)
+        echo "reason_${safe_reason}.value $count"
+    fi
+done
