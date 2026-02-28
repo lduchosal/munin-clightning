@@ -41,6 +41,14 @@ clboss_cmd() {
     $BINARY --lightning-dir=$DATA_DIR "$@" 2>/dev/null
 }
 
+if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
+    echo
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo
+fi
+
 if [ "$1" = "autoconf" ]; then
     if clboss_cmd clboss-status >/dev/null 2>&1; then
         echo "yes"
@@ -55,6 +63,64 @@ fi
 #
 
 STATUS=$(clboss_cmd clboss-status 2>/dev/null)
+
+# Test mode - mock data
+if [ "$1" = "test" ]; then
+    STATUS='{
+        "internet": {"connection": "online"},
+        "onchain_feerate": {"judgment": "low fees", "last_feerate_perkw": 2500},
+        "my_uptime": {"past_3_days": 0.98, "past_2_weeks": 0.95, "past_1_month": 0.92},
+        "channel_candidates": [
+            {"onlineness": 25, "id": "02abc"},
+            {"onlineness": 30, "id": "02def"},
+            {"onlineness": 15, "id": "02ghi"}
+        ],
+        "peer_metrics": {
+            "02abc123": {"connect_rate": 0.95, "in_fee_msat_per_day": 1000, "out_fee_msat_per_day": 500},
+            "02def456": {"connect_rate": 0.88, "in_fee_msat_per_day": 2000, "out_fee_msat_per_day": 1500}
+        },
+        "peer_complaints": {
+            "02xyz789": ["slow_response", "high_fees"]
+        },
+        "offchain_earnings_tracker": {
+            "total": {
+                "in_earnings": 5000000,
+                "out_earnings": 3000000,
+                "in_expenditures": 500000,
+                "out_expenditures": 300000,
+                "in_forwarded": 50000000000,
+                "out_forwarded": 49000000000,
+                "in_rebalanced": 10000000000,
+                "out_rebalanced": 9500000000
+            }
+        },
+        "swap_report": {
+            "swaps": [{"id": 1}, {"id": 2}],
+            "percent_loss": 2.5,
+            "total_amount_sent": "1000000msat",
+            "total_amount_received": "975000msat",
+            "loss": "25000msat"
+        }
+    }'
+fi
+
+if [ "$1" = "test2" ]; then
+    STATUS='{
+        "internet": {"connection": "offline"},
+        "onchain_feerate": {"judgment": "high fees", "last_feerate_perkw": 0},
+        "my_uptime": {},
+        "channel_candidates": [],
+        "peer_metrics": {},
+        "peer_complaints": {},
+        "offchain_earnings_tracker": {"total": {}},
+        "swap_report": {"swaps": []}
+    }'
+fi
+
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
+    echo "STATUS:"
+    echo "$STATUS" | jq .
+fi
 
 if [ -z "$STATUS" ]; then
     if [ "$1" = "config" ]; then

@@ -41,6 +41,14 @@ sql_query() {
     $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
 }
 
+if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
+    echo
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo
+fi
+
 if [ "$1" = "autoconf" ]; then
     if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
         echo "yes"
@@ -113,6 +121,36 @@ ACCOUNT_EVENTS=$(sql_query "SELECT
     COALESCE(SUM(debit_msat), 0) as debit
 FROM bkpr_accountevents
 GROUP BY type")
+
+# Test mode - mock data
+if [ "$1" = "test" ]; then
+    INCOME_BY_TAG='{"rows":[["routed", 5000000000, 0], ["invoice", 10000000000, 0], ["deposit", 50000000000, 0]]}'
+    INCOME_TOTAL='{"rows":[[65000000000, 5000000000]]}'
+    INCOME_DAILY='{"rows":[[500000000, 100000000]]}'
+    INCOME_WEEKLY='{"rows":[[3000000000, 500000000]]}'
+    INCOME_MONTHLY='{"rows":[[12000000000, 2000000000]]}'
+    ROUTING_FEES='{"rows":[[5000000000]]}'
+    ROUTING_FEES_DAILY='{"rows":[[100000000]]}'
+    ACCOUNT_EVENTS='{"rows":[["channel", 50, 40000000000, 10000000000], ["onchain", 20, 25000000000, 0]]}'
+fi
+
+if [ "$1" = "test2" ]; then
+    INCOME_BY_TAG='{"rows":[]}'
+    INCOME_TOTAL='{"rows":[[0, 0]]}'
+    INCOME_DAILY='{"rows":[[0, 0]]}'
+    INCOME_WEEKLY='{"rows":[[0, 0]]}'
+    INCOME_MONTHLY='{"rows":[[0, 0]]}'
+    ROUTING_FEES='{"rows":[[0]]}'
+    ROUTING_FEES_DAILY='{"rows":[[0]]}'
+    ACCOUNT_EVENTS='{"rows":[]}'
+fi
+
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
+    echo "INCOME_TOTAL:"
+    echo "$INCOME_TOTAL" | jq .
+    echo "ROUTING_FEES:"
+    echo "$ROUTING_FEES" | jq .
+fi
 
 # Parse results
 total_credit=$(echo "$INCOME_TOTAL" | jq -r '.rows[0][0] // 0')

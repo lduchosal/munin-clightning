@@ -41,6 +41,14 @@ sql_query() {
     $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
 }
 
+if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
+    echo
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo
+fi
+
 if [ "$1" = "autoconf" ]; then
     if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
         echo "yes"
@@ -113,6 +121,34 @@ FEERATE_STATS=$(sql_query "SELECT
     MAX(feerate_perkw) as max_feerate
 FROM peerchannels
 WHERE state = 'CHANNELD_NORMAL' AND feerate_perkw IS NOT NULL")
+
+# Test mode - mock data
+if [ "$1" = "test" ]; then
+    CHANNEL_STATES='{"rows":[["CHANNELD_NORMAL", 5], ["CHANNELD_AWAITING_LOCKIN", 1], ["ONCHAIN", 2]]}'
+    CONNECTION_STATUS='{"rows":[[4, 1, 5]]}'
+    HTLC_STATS='{"rows":[[12, 5000000000]]}'
+    HTLC_DIRECTION='{"rows":[["in", 6, 2500000000], ["out", 6, 2500000000]]}'
+    PAYMENT_STATS='{"rows":[["694360x1604x1", 100, 95, 80, 75, 50000000000, 40000000000]]}'
+    FEE_STATS='{"rows":[[1000, 500, 0, 2000, 100, 1000]]}'
+    FEERATE_STATS='{"rows":[[2500, 1000, 5000]]}'
+fi
+
+if [ "$1" = "test2" ]; then
+    CHANNEL_STATES='{"rows":[]}'
+    CONNECTION_STATUS='{"rows":[[0, 0, 0]]}'
+    HTLC_STATS='{"rows":[[0, 0]]}'
+    HTLC_DIRECTION='{"rows":[]}'
+    PAYMENT_STATS='{"rows":[]}'
+    FEE_STATS='{"rows":[[0, 0, 0, 0, 0, 0]]}'
+    FEERATE_STATS='{"rows":[[0, 0, 0]]}'
+fi
+
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
+    echo "CHANNEL_STATES:"
+    echo "$CHANNEL_STATES" | jq .
+    echo "CONNECTION_STATUS:"
+    echo "$CONNECTION_STATUS" | jq .
+fi
 
 # Parse results
 connected=$(echo "$CONNECTION_STATUS" | jq -r '.rows[0][0] // 0')

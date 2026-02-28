@@ -41,6 +41,14 @@ sql_query() {
     $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
 }
 
+if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
+    echo
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo
+fi
+
 if [ "$1" = "autoconf" ]; then
     if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
         echo "yes"
@@ -94,6 +102,28 @@ INVOICES_DAILY=$(sql_query "SELECT
     COALESCE(SUM(CASE WHEN status='paid' THEN amount_received_msat ELSE 0 END), 0) as amount
 FROM invoices
 WHERE paid_at >= $DAY_AGO OR (status='unpaid' AND expires_at >= $DAY_AGO)")
+
+# Test mode - mock data
+if [ "$1" = "test" ]; then
+    SENDPAYS_TOTAL='{"rows":[[250, 200, 10, 40, 50000000000, 250000000]]}'
+    SENDPAYS_DAILY='{"rows":[[15, 12, 2, 3000000000, 15000000]]}'
+    INVOICES_TOTAL='{"rows":[[100, 80, 15, 5, 40000000000]]}'
+    INVOICES_DAILY='{"rows":[[5, 4, 2000000000]]}'
+fi
+
+if [ "$1" = "test2" ]; then
+    SENDPAYS_TOTAL='{"rows":[[0, 0, 0, 0, 0, 0]]}'
+    SENDPAYS_DAILY='{"rows":[[0, 0, 0, 0, 0]]}'
+    INVOICES_TOTAL='{"rows":[[0, 0, 0, 0, 0]]}'
+    INVOICES_DAILY='{"rows":[[0, 0, 0]]}'
+fi
+
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
+    echo "SENDPAYS_TOTAL:"
+    echo "$SENDPAYS_TOTAL" | jq .
+    echo "INVOICES_TOTAL:"
+    echo "$INVOICES_TOTAL" | jq .
+fi
 
 # Parse sendpays results
 send_total=$(echo "$SENDPAYS_TOTAL" | jq -r '.rows[0][0] // 0')

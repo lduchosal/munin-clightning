@@ -41,6 +41,14 @@ sql_query() {
     $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
 }
 
+if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
+    echo
+    echo "# "
+    echo "# $0 $1"
+    echo "# "
+    echo
+fi
+
 if [ "$1" = "autoconf" ]; then
     if command -v $BINARY >/dev/null && [ -d "$DATA_DIR" ]; then
         echo "yes"
@@ -97,6 +105,32 @@ CHANNEL_STATS=$(sql_query "SELECT
 FROM forwards
 WHERE received_time >= $DAY_AGO
 GROUP BY in_channel")
+
+# Test mode - mock data
+if [ "$1" = "test" ]; then
+    TOTAL_STATS='{"rows":[[1500, 1200, 150, 100, 50, 5000000, 150000000000]]}'
+    DAILY_STATS='{"rows":[[75, 60, 10, 250000, 7500000000]]}'
+    HOURLY_STATS='{"rows":[[5, 4, 15000]]}'
+    CHANNEL_STATS='{"rows":[["694360x1604x1", 40, 35, 150000], ["694393x176x1", 35, 25, 100000]]}'
+fi
+
+if [ "$1" = "test2" ]; then
+    TOTAL_STATS='{"rows":[[0, 0, 0, 0, 0, 0, 0]]}'
+    DAILY_STATS='{"rows":[[0, 0, 0, 0, 0]]}'
+    HOURLY_STATS='{"rows":[[0, 0, 0]]}'
+    CHANNEL_STATS='{"rows":[]}'
+fi
+
+if [ "$1" = "debug" ] || [ "$2" = "debug" ]; then
+    echo "TOTAL_STATS:"
+    echo "$TOTAL_STATS" | jq .
+    echo "DAILY_STATS:"
+    echo "$DAILY_STATS" | jq .
+    echo "HOURLY_STATS:"
+    echo "$HOURLY_STATS" | jq .
+    echo "CHANNEL_STATS:"
+    echo "$CHANNEL_STATS" | jq .
+fi
 
 # Parse results
 total_all=$(echo "$TOTAL_STATS" | jq -r '.rows[0][0] // 0')
