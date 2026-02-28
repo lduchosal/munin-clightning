@@ -30,7 +30,7 @@ AGPLv3+
 
 =cut
 
-BINARY=${binary:-"/usr/bin/lightning-cli"}
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
 if [ "$1" == "test" ] \
@@ -250,6 +250,7 @@ graph_title Pays
 graph_vlabel pays
 graph_category lightningd
 graph_info This graph shows the pays on your lightningd node.
+graph_args --lower-limit 0
 
 total.label total
 complete.label complete
@@ -261,6 +262,7 @@ graph_title Pays
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the pays amount on your lightningd node.
+graph_args --lower-limit 0
 
 total.label total
 complete.label complete

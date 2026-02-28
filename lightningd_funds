@@ -30,7 +30,7 @@ AGPLv3+
 
 =cut
 
-BINARY=${binary:-"/usr/bin/lightning-cli"}
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
 if [ "$1" == "test" ] \
@@ -218,6 +218,7 @@ graph_title Channel and funds
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the sats available on open channels and remaining funds.
+graph_args --lower-limit 0
 
 total.label total
 outputs.label outputs
@@ -235,6 +236,7 @@ graph_title Channel and funds / Outputs
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the sats available on available outputs
+graph_args --lower-limit 0
 
 
 __EOF__
@@ -258,6 +260,7 @@ graph_title Channel and funds / Channels
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the sats available on open channels
+graph_args --lower-limit 0
 
 
 __EOF__

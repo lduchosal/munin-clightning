@@ -30,7 +30,7 @@ AGPLv3+
 
 =cut
 
-BINARY=${binary:-"/usr/bin/lightning-cli"}
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
 if [ "$1" == "test" ] \

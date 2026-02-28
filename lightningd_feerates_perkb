@@ -30,7 +30,7 @@ AGPLv3+
 
 =cut
 
-BINARY=${binary:-"/usr/bin/lightning-cli"}
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
 if [ "$1" == "test" ] \
@@ -108,6 +108,7 @@ graph_title lightningd feerates perkb
 graph_vlabel sats
 graph_category lightningd
 graph_info This graph shows the feerates perkb reported by lightningd.
+graph_args --lower-limit 0
 
 perkb_opening.label opening
 perkb_mutual_close.label mutual_close

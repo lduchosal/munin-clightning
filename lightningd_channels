@@ -30,7 +30,7 @@ AGPLv3+
 
 =cut
 
-BINARY=${binary:-"/usr/bin/lightning-cli"}
+BINARY=${binary:-"/usr/local/bin/lightning-cli"}
 DATA_DIR=${data_dir:-"/var/db/c-lightning"}
 
 if [ "$1" == "test" ] \
@@ -192,6 +192,8 @@ graph_title Channel count
 graph_vlabel number of channels
 graph_category lightningd
 graph_info This graph shows the number of open channels.
+graph_args --lower-limit 0
+
 total.label total
 total.draw LINE3
 
@@ -215,6 +217,7 @@ graph_title channel balance $short_channel_id
 graph_vlabel msats
 graph_category lightningd
 graph_info This graph shows the balance of $short_channel_id.
+graph_args --lower-limit 0
 
 our.label our
 our.draw AREA
