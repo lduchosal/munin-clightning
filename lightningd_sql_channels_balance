@@ -146,7 +146,7 @@ fi
 
 if [ "$1" = "config" ]; then
     cat <<EOF
-multigraph channels_balance_global
+multigraph sql_channels_balance_global
 graph_title Global Channel Balance
 graph_vlabel sats
 graph_category lightningd
@@ -162,7 +162,7 @@ capacity.label Total Capacity
 capacity.draw LINE2
 capacity.colour 000000
 
-multigraph channels_liquidity
+multigraph sql_channels_liquidity
 graph_title Channel Liquidity
 graph_vlabel sats
 graph_category lightningd
@@ -175,7 +175,7 @@ receivable.label Receivable (Inbound)
 receivable.draw AREA
 receivable.colour 0000AA
 
-multigraph channels_balance_ratio
+multigraph sql_channels_balance_ratio
 graph_title Balance Ratio
 graph_vlabel percent
 graph_category lightningd
@@ -187,7 +187,7 @@ ratio.draw LINE2
 ratio.warning 30:70
 ratio.critical 20:80
 
-multigraph channels_count
+multigraph sql_channels_count
 graph_title Active Channels
 graph_vlabel count
 graph_category lightningd
@@ -203,7 +203,7 @@ EOF
             sid=$(echo "$scid" | sha1 | cut -c1-8 2>/dev/null || echo "$scid" | md5 | cut -c1-8 2>/dev/null || echo "$scid" | cksum | cut -d' ' -f1)
             cat <<EOF
 
-multigraph channels_balance_$sid
+multigraph sql_channels_balance_$sid
 graph_title Balance: $scid
 graph_vlabel sats
 graph_category lightningd
@@ -227,22 +227,22 @@ fi
 #
 
 cat <<EOF
-multigraph channels_balance_global
+multigraph sql_channels_balance_global
 
 our.value $our_total_sat
 their.value $their_total_sat
 capacity.value $capacity_total_sat
 
-multigraph channels_liquidity
+multigraph sql_channels_liquidity
 
 spendable.value $spendable_total_sat
 receivable.value $receivable_total_sat
 
-multigraph channels_balance_ratio
+multigraph sql_channels_balance_ratio
 
 ratio.value $balance_ratio
 
-multigraph channels_count
+multigraph sql_channels_count
 
 count.value $channel_count
 EOF
@@ -259,7 +259,7 @@ echo "$CHANNEL_BALANCES" | jq -c '.rows[]?' 2>/dev/null | while read row; do
         their_sat=$((their_msat / 1000))
         cat <<EOF
 
-multigraph channels_balance_$sid
+multigraph sql_channels_balance_$sid
 
 our_$sid.value $our_sat
 their_$sid.value $their_sat

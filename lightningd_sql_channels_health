@@ -187,7 +187,7 @@ fi
 
 if [ "$1" = "config" ]; then
     cat <<EOF
-multigraph channels_connection
+multigraph sql_channels_connection
 graph_title Channel Connection Status
 graph_vlabel count
 graph_category lightningd
@@ -200,7 +200,7 @@ disconnected.label Disconnected
 disconnected.draw AREASTACK
 disconnected.colour AA0000
 
-multigraph channels_connection_ratio
+multigraph sql_channels_connection_ratio
 graph_title Channel Connection Ratio
 graph_vlabel percent
 graph_category lightningd
@@ -212,7 +212,7 @@ ratio.draw LINE2
 ratio.warning 70:
 ratio.critical 50:
 
-multigraph channels_states
+multigraph sql_channels_states
 graph_title Channel States
 graph_vlabel count
 graph_category lightningd
@@ -289,16 +289,16 @@ fi
 #
 
 cat <<EOF
-multigraph channels_connection
+multigraph sql_channels_connection
 
 connected.value $connected
 disconnected.value $disconnected
 
-multigraph channels_connection_ratio
+multigraph sql_channels_connection_ratio
 
 ratio.value $connection_ratio
 
-multigraph channels_states
+multigraph sql_channels_states
 
 EOF
 

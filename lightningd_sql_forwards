@@ -164,7 +164,7 @@ hourly_fees_sat=$((hourly_fees / 1000))
 
 if [ "$1" = "config" ]; then
     cat <<EOF
-multigraph forwards_count
+multigraph sql_forwards_count
 graph_title Forwards Count (All Time)
 graph_vlabel count
 graph_category lightningd
@@ -186,7 +186,7 @@ offered.label Offered
 offered.draw AREASTACK
 offered.info Currently offered/pending
 
-multigraph forwards_fees
+multigraph sql_forwards_fees
 graph_title Forwarding Fees Earned
 graph_vlabel sats
 graph_category lightningd
@@ -202,7 +202,7 @@ hourly_fees.label Last Hour
 hourly_fees.draw LINE2
 hourly_fees.info Fees earned in last hour
 
-multigraph forwards_volume
+multigraph sql_forwards_volume
 graph_title Forwarding Volume
 graph_vlabel sats
 graph_category lightningd
@@ -215,7 +215,7 @@ daily_volume.label Last 24h
 daily_volume.draw LINE2
 daily_volume.info Volume forwarded in last 24 hours
 
-multigraph forwards_daily
+multigraph sql_forwards_daily
 graph_title Daily Forwards (Last 24h)
 graph_vlabel count
 graph_category lightningd
@@ -228,7 +228,7 @@ daily_settled.draw AREASTACK
 daily_failed.label Failed
 daily_failed.draw AREASTACK
 
-multigraph forwards_hourly
+multigraph sql_forwards_hourly
 graph_title Hourly Forwards (Last Hour)
 graph_vlabel count
 graph_category lightningd
@@ -246,7 +246,7 @@ EOF
             sid=$(echo "$channel" | sha1 | cut -c1-8 2>/dev/null || echo "$channel" | md5 | cut -c1-8 2>/dev/null || echo "$channel" | cksum | cut -d' ' -f1)
             cat <<EOF
 
-multigraph forwards_channel_$sid
+multigraph sql_forwards_channel_$sid
 graph_title Forwards via $channel (24h)
 graph_vlabel count
 graph_category lightningd
@@ -268,7 +268,7 @@ fi
 #
 
 cat <<EOF
-multigraph forwards_count
+multigraph sql_forwards_count
 
 total.value $total_all
 settled.value $settled_all
@@ -276,24 +276,24 @@ failed.value $failed_all
 local_failed.value $local_failed_all
 offered.value $offered_all
 
-multigraph forwards_fees
+multigraph sql_forwards_fees
 
 total_fees.value $fees_all_sat
 daily_fees.value $daily_fees_sat
 hourly_fees.value $hourly_fees_sat
 
-multigraph forwards_volume
+multigraph sql_forwards_volume
 
 total_volume.value $volume_all_sat
 daily_volume.value $daily_volume_sat
 
-multigraph forwards_daily
+multigraph sql_forwards_daily
 
 daily_total.value $daily_total
 daily_settled.value $daily_settled
 daily_failed.value $daily_failed
 
-multigraph forwards_hourly
+multigraph sql_forwards_hourly
 
 hourly_total.value $hourly_total
 hourly_settled.value $hourly_settled
@@ -309,7 +309,7 @@ echo "$CHANNEL_STATS" | jq -c '.rows[]?' 2>/dev/null | while read row; do
         sid=$(echo "$channel" | sha1 | cut -c1-8 2>/dev/null || echo "$channel" | md5 | cut -c1-8 2>/dev/null || echo "$channel" | cksum | cut -d' ' -f1)
         cat <<EOF
 
-multigraph forwards_channel_$sid
+multigraph sql_forwards_channel_$sid
 
 total_$sid.value $total
 settled_$sid.value $settled

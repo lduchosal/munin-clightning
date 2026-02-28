@@ -176,7 +176,7 @@ fi
 
 if [ "$1" = "config" ]; then
     cat <<EOF
-multigraph sendpays_count
+multigraph sql_sendpays_count
 graph_title Outgoing Payments (All Time)
 graph_vlabel count
 graph_category lightningd
@@ -194,7 +194,7 @@ failed.label Failed
 failed.draw AREASTACK
 failed.colour AA0000
 
-multigraph sendpays_daily
+multigraph sql_sendpays_daily
 graph_title Outgoing Payments (Last 24h)
 graph_vlabel count
 graph_category lightningd
@@ -209,7 +209,7 @@ daily_failed.label Failed
 daily_failed.draw AREASTACK
 daily_failed.colour AA0000
 
-multigraph sendpays_amount
+multigraph sql_sendpays_amount
 graph_title Outgoing Payment Volume
 graph_vlabel sats
 graph_category lightningd
@@ -220,7 +220,7 @@ amount.draw LINE2
 daily_amount.label Last 24h
 daily_amount.draw LINE2
 
-multigraph sendpays_fees
+multigraph sql_sendpays_fees
 graph_title Outgoing Payment Fees Paid
 graph_vlabel sats
 graph_category lightningd
@@ -231,7 +231,7 @@ fees.draw LINE2
 daily_fees.label Last 24h
 daily_fees.draw LINE2
 
-multigraph invoices_count
+multigraph sql_invoices_count
 graph_title Incoming Invoices (All Time)
 graph_vlabel count
 graph_category lightningd
@@ -249,7 +249,7 @@ expired.label Expired
 expired.draw AREASTACK
 expired.colour AA0000
 
-multigraph invoices_daily
+multigraph sql_invoices_daily
 graph_title Incoming Invoices (Last 24h)
 graph_vlabel count
 graph_category lightningd
@@ -258,7 +258,7 @@ graph_info Invoices paid in last 24 hours
 daily_paid.label Paid
 daily_paid.draw LINE2
 
-multigraph invoices_amount
+multigraph sql_invoices_amount
 graph_title Incoming Payment Volume
 graph_vlabel sats
 graph_category lightningd
@@ -292,41 +292,41 @@ fi
 #
 
 cat <<EOF
-multigraph sendpays_count
+multigraph sql_sendpays_count
 
 total.value $send_total
 complete.value $send_complete
 pending.value $send_pending
 failed.value $send_failed
 
-multigraph sendpays_daily
+multigraph sql_sendpays_daily
 
 daily_total.value $send_daily_total
 daily_complete.value $send_daily_complete
 daily_failed.value $send_daily_failed
 
-multigraph sendpays_amount
+multigraph sql_sendpays_amount
 
 amount.value $send_amount_sat
 daily_amount.value $send_daily_amount_sat
 
-multigraph sendpays_fees
+multigraph sql_sendpays_fees
 
 fees.value $send_fees_sat
 daily_fees.value $send_daily_fees_sat
 
-multigraph invoices_count
+multigraph sql_invoices_count
 
 total.value $inv_total
 paid.value $inv_paid
 unpaid.value $inv_unpaid
 expired.value $inv_expired
 
-multigraph invoices_daily
+multigraph sql_invoices_daily
 
 daily_paid.value $inv_daily_paid
 
-multigraph invoices_amount
+multigraph sql_invoices_amount
 
 amount.value $inv_amount_sat
 daily_amount.value $inv_daily_amount_sat
