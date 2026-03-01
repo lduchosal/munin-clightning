@@ -298,25 +298,25 @@ cat <<EOF
 multigraph income_total
 
 credit.value $total_credit_sat
-debit.value $total_debit_sat
+debit.value $((total_debit_sat * -1))
 net.value $net_total_sat
 
 multigraph income_daily
 
 daily_credit.value $daily_credit_sat
-daily_debit.value $daily_debit_sat
+daily_debit.value $((daily_debit_sat * -1))
 daily_net.value $net_daily_sat
 
 multigraph income_weekly
 
 weekly_credit.value $weekly_credit_sat
-weekly_debit.value $weekly_debit_sat
+weekly_debit.value $((weekly_debit_sat * -1))
 weekly_net.value $net_weekly_sat
 
 multigraph income_monthly
 
 monthly_credit.value $monthly_credit_sat
-monthly_debit.value $monthly_debit_sat
+monthly_debit.value $((monthly_debit_sat * -1))
 monthly_net.value $net_monthly_sat
 
 multigraph routing_fees
