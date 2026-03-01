@@ -34,7 +34,7 @@ run_debug() {
 
     echo ""
     echo "--- direct execution with debug ---"
-    MUNIN_DEBUG=1 /usr/local/share/munin/plugins/"$plugin" debug 2>&1 | tee "$OUTPUT_DIR/${plugin}_direct.txt"
+    MUNIN_DEBUG=1 /usr/local/share/munin/plugins/munin-lightningd/"$plugin" debug 2>&1 | tee "$OUTPUT_DIR/${plugin}_direct.txt"
 
     echo ""
     echo "================================================"

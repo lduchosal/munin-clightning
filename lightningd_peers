@@ -63,6 +63,7 @@ listpeers=$($BINARY --lightning-dir=$DATA_DIR listpeers)
 
 if [ "$1" = "test" ]; then
 
+jsont=$(cat <<__EOF__
 {
    "peers": [
       {
