@@ -228,17 +228,19 @@ fi
 # Values
 #
 
+their_total_sat_neg=$((their_total_sat * -1))
+
 cat <<EOF
 multigraph sql_channels_balance_global
 
 our.value $our_total_sat
-their.value $their_total_sat
+their.value $their_total_sat_neg
 capacity.value $capacity_total_sat
 
 multigraph sql_channels_liquidity
 
 spendable.value $spendable_total_sat
-receivable.value $receivable_total_sat
+receivable.value $((receivable_total_sat * -1))
 
 multigraph sql_channels_balance_ratio
 
@@ -258,7 +260,7 @@ echo "$CHANNEL_BALANCES" | jq -c '.rows[]?' 2>/dev/null | while read row; do
     if [ -n "$scid" ] && [ "$scid" != "null" ]; then
         sid=$(echo "$scid" | sha1 | cut -c1-8 2>/dev/null || echo "$scid" | md5 | cut -c1-8 2>/dev/null || echo "$scid" | cksum | cut -d' ' -f1)
         our_sat=$((our_msat / 1000))
-        their_sat=$((their_msat / 1000))
+        their_sat=$(( (their_msat / 1000) * -1 ))
         cat <<EOF
 
 multigraph sql_channels_balance_$sid
