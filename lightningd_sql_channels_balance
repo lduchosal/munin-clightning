@@ -38,7 +38,9 @@ if [ ! -x "$BINARY" ]; then
 fi
 
 sql_query() {
-    $BINARY --lightning-dir=$DATA_DIR -k sql query="$1" 2>/dev/null
+    # Collapse multi-line query to single line and use -k for proper = handling
+    query=$(printf '%s' "$1" | tr '\n' ' ' | sed 's/  */ /g')
+    $BINARY --lightning-dir=$DATA_DIR -k sql query="$query" 2>/dev/null
 }
 
 if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
