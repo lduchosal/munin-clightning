@@ -38,7 +38,7 @@ if [ ! -x "$BINARY" ]; then
 fi
 
 sql_query() {
-    $BINARY --lightning-dir=$DATA_DIR sql "$1" 2>/dev/null
+    $BINARY --lightning-dir=$DATA_DIR -k sql query="$1" 2>/dev/null
 }
 
 if [ "$1" = "test" ] || [ "$1" = "test2" ]; then
