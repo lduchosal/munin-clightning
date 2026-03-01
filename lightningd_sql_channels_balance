@@ -155,10 +155,10 @@ graph_category lightningd
 graph_info Total balance across all channels
 
 our.label Our Balance
-our.draw AREASTACK
+our.draw AREA
 our.colour 00AA00
 their.label Their Balance
-their.draw AREASTACK
+their.draw AREA
 their.colour 0000AA
 capacity.label Total Capacity
 capacity.draw LINE2
@@ -212,10 +212,10 @@ graph_category lightningd
 graph_info Balance distribution for channel $scid
 
 our_$sid.label Our Balance
-our_$sid.draw AREASTACK
+our_$sid.draw AREA
 our_$sid.colour 00AA00
 their_$sid.label Their Balance
-their_$sid.draw AREASTACK
+their_$sid.draw AREA
 their_$sid.colour 0000AA
 EOF
         fi
